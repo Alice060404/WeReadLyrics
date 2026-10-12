@@ -34,7 +34,7 @@ class WeReadLyricsModule : XposedModule() {
 
         if (processName == TARGET_PACKAGE && param.isFirstPackage && probesInstalled.compareAndSet(false, true)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                installHighlightProbes(param.defaultClassLoader)
+                installProbes(param.defaultClassLoader)
             } else {
                 log(Log.WARN, LOG_TAG, "Probe unavailable below Android 10")
             }
@@ -42,11 +42,11 @@ class WeReadLyricsModule : XposedModule() {
     }
 
     @SuppressLint("NewApi")
-    private fun installHighlightProbes(classLoader: ClassLoader) {
+    private fun installProbes(classLoader: ClassLoader) {
         try {
             val bagClass = Class.forName(TTS_BAG_CLASS, false, classLoader)
             val broadcasterClass = Class.forName(HIGHLIGHT_BROADCASTER_CLASS, false, classLoader)
-            val playerClass = Class.forName(TTS_PLAYER_CLASS, false, classLoader)
+            val bookPlayerClass = Class.forName(TTS_BOOK_PLAYER_CLASS, false, classLoader)
             val textGetter = bagClass.getMethod("getText")
 
             installHighlightProbe(
@@ -69,15 +69,19 @@ class WeReadLyricsModule : XposedModule() {
                 "stop",
                 textGetter,
             )
-            installLifecycleProbe(playerClass.getDeclaredMethod("onStart", String::class.java), "start")
-            installLifecycleProbe(playerClass.getDeclaredMethod("onPause", String::class.java), "pause")
-            installLifecycleProbe(playerClass.getDeclaredMethod("onResume", String::class.java), "resume")
-            installLifecycleProbe(playerClass.getDeclaredMethod("onStop", String::class.java), "stop")
+            installControlProbe(bookPlayerClass.getDeclaredMethod("start"), "start")
+            installControlProbe(bookPlayerClass.getDeclaredMethod("pause"), "pause")
+            installControlProbe(bookPlayerClass.getDeclaredMethod("resume"), "resume")
+            installControlProbe(bookPlayerClass.getDeclaredMethod("stop"), "stop")
+            installControlProbe(bookPlayerClass.getDeclaredMethod("seekTo", java.lang.Long.TYPE), "seek")
+            installControlProbe(bookPlayerClass.getDeclaredMethod("foreAhead"), "fore_ahead")
+            installControlProbe(bookPlayerClass.getDeclaredMethod("foreBack"), "fore_back")
 
             log(
                 Log.INFO,
                 LOG_TAG,
-                "Probe install complete: highlight start/pause/stop; player start/pause/resume/stop",
+                "Probe install complete: highlight start/pause/stop; " +
+                    "book control start/pause/resume/stop/seek/fore_ahead/fore_back",
             )
         } catch (error: Throwable) {
             log(
@@ -105,15 +109,15 @@ class WeReadLyricsModule : XposedModule() {
     }
 
     @SuppressLint("NewApi")
-    private fun installLifecycleProbe(method: Method, event: String) {
+    private fun installControlProbe(method: Method, event: String) {
         hook(method)
-            .setId("$MODULE_ID:player_$event")
+            .setId("$MODULE_ID:control_$event")
             .intercept(
                 XposedInterface.Hooker { chain ->
                     try {
-                        logLifecycleProbe(event, chain.args)
+                        logControlProbe(event)
                     } catch (error: Throwable) {
-                        logObservationFailure("player_$event", error)
+                        logObservationFailure("control_$event", error)
                     }
                     chain.proceed()
                 },
@@ -140,16 +144,14 @@ class WeReadLyricsModule : XposedModule() {
         )
     }
 
-    private fun logLifecycleProbe(event: String, args: List<Any?>) {
-        val utteranceId = args.firstOrNull() as? String ?: ""
+    private fun logControlProbe(event: String) {
         val sequence = eventSequence.incrementAndGet()
         val elapsedMs = SystemClock.elapsedRealtime() - probeStartElapsedMs
 
         log(
             Log.INFO,
             LOG_TAG,
-            "Probe event=player_$event, seq=$sequence, elapsedMs=$elapsedMs, " +
-                "utteranceLength=${utteranceId.length}, utteranceToken=${utteranceId.sessionToken()}, " +
+            "Probe event=control_$event, seq=$sequence, elapsedMs=$elapsedMs, " +
                 "thread=${Thread.currentThread().name}",
         )
     }
@@ -177,7 +179,7 @@ class WeReadLyricsModule : XposedModule() {
         const val LOG_TAG = "WeReadLyrics"
         const val MODULE_ID = "io.github.alice060404.wereadlyrics"
         const val TTS_BAG_CLASS = "com.tencent.weread.tts.model.TTSBag"
-        const val TTS_PLAYER_CLASS = "com.tencent.weread.tts.TTSPlayer"
+        const val TTS_BOOK_PLAYER_CLASS = "com.tencent.weread.tts.TTSBookPlayer"
         const val HIGHLIGHT_BROADCASTER_CLASS = "com.tencent.weread.tts.TTSHighLightBroadcaster"
         const val TOKEN_BYTES = 6
 
