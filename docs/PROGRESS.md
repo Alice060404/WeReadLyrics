@@ -38,6 +38,8 @@
 - 新增纯 Kotlin `core` 模块、标准事件模型和有界同步状态机；以会话号及单调序号拒绝旧事件，预取不抢占当前文本，跳转/切章/停止会清除旧状态。
 - `PlaybackStateMachineTest` 共 10 项，覆盖预取、乱序、暂停、继续、跳转、切章、停止、会话重启、有界队列、非法范围及同句重播；0 跳过、0 失败、0 错误。
 - 新增观测事件适配器，将 P3 实测的 pause、stop+start、范围回退和章节变化归一化为标准事件；12 项适配器测试通过，core 合计 22 项测试、0 失败。时间窗口由接入层显式配置，尚未宣称产品级数值。
+- 0.5.0 将 core 接入只读 Hook：正文只在进程内传递，标准状态日志仅含会话、序号、状态、长度、短 token 和范围；延迟超时回调单独隔离异常。
+- 0.5.0 已通过全项目测试、Debug 构建和 lint；APK 版本、v2 调试签名、API 102 元数据、core DEX 打包和 libxposed `compileOnly` 边界检查通过。
 
 ## 验证与阻塞
 
@@ -46,6 +48,7 @@
 - Gradle/Java 不自动采用 shell 代理变量；当前验证命令显式传递 JVM HTTP/HTTPS 代理。后续应采用不含凭据的本机 Gradle 代理配置或同样的临时 JVM 参数。
 - P0 自动验证与一加只读基线已完成；Redmi 未连接且不在当前阶段测试。
 - 当前 P3 Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.4.0（versionCode 4），SHA-256 为 `ea714374ee7126be769339df4b59f74f95b868be7f0c70dc3eeca87e60af0811`；构建产物受 `.gitignore` 保护，已安装到一加 11。
+- 当前 P4 Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.5.0（versionCode 5），SHA-256 为 `b720f8590e4d0456b731b0303351b2aff52c8bf30474e67b0a1dc743394f3dd9`；尚未安装到设备，一加 11 当前仍为 0.4.0。
 - Lint 仅保留一个版本提示：Gradle 8.14.6 已存在。当前继续使用与选定 AGP 8.13.2 官方兼容表一致的 Gradle 8.13。
 - APK 安装、LSPosed 模块识别、作用域和主进程加载日志已通过一加 11 真机验证；日志不含书籍原文。P1 仅验证 AI 朗读基础无回归，P3 随后完成了高亮与发声关联测试。
 - P2 找到文本与播放状态候选点；JADX 报告大量反编译错误，关键签名已用原始 DEX 工具复核。P3 已完成第一轮真机时序验证，结论为 `PARTIAL`。
@@ -55,4 +58,4 @@
 
 ## 下一步
 
-为真实 Hook 事件实现独立适配器，并用 P3 记录的 stop+start、范围重置和暂停序列测试状态归一化；随后在日志层验证同步输出。
+经用户许可安装 0.5.0，在一加 11 按 `P4_DEVICE_TEST.md` 验证标准状态输出；通过后完成 P4 验收。

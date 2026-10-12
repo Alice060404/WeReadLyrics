@@ -9,6 +9,7 @@
 - [P1 真机验证步骤](docs/P1_DEVICE_TEST.md)
 - [P2 Hook 调查](docs/HOOK_RESEARCH.md)
 - [P3 真机验证步骤](docs/P3_DEVICE_TEST.md)
+- [P4 日志层同步验证](docs/P4_DEVICE_TEST.md)
 
 当前入口使用设备已确认的 Modern libxposed API 102。P3 已在一加 11 上证明高亮文本与实际播放项关联；`core/` 包含不依赖 Android 的事件模型和同步状态机。
 

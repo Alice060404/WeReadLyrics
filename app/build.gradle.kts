@@ -11,8 +11,8 @@ android {
         applicationId = "io.github.alice060404.wereadlyrics"
         minSdk = 24
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "0.5.0"
     }
 
     compileOptions {
@@ -26,5 +26,6 @@ android {
 }
 
 dependencies {
+    implementation(project(":core"))
     compileOnly("io.github.libxposed:api:102.0.0")
 }
