@@ -25,3 +25,11 @@
 - 人工观察只能证明本轮样本的同步关系，不能给出毫秒级误差。
 
 下一轮增加 `TTSPlayer.onStart/onPause/onResume/onStop` 只读生命周期探针，不增加高频 `onProgress` 日志。随后在同一设备补测上述场景，再给出最终 PASS/PARTIAL/FAIL。
+
+## 第二轮结论：PARTIAL
+
+WeReadLyrics 0.3.0 增加 `TTSPlayer.onStart/onPause/onResume/onStop` 回调探针。七个 Hook 均成功安装，用户再次执行播放约 20 秒、暂停、继续约 15 秒和停止，并报告发声、高亮和控制均正常。
+
+实时日志中，高亮 `start` 的字符范围从 `0:10` 连续推进到 `84:115`；暂停附近出现高亮 `stop`，约 8.0 秒后以相同范围 `84:115` 恢复，最终停止后再次出现高亮 `stop`。没有出现 `player_pause` 或 `player_resume`。`player_stop` 在自然换句前反复出现，说明该回调表示单个 utterance 结束，不能表示用户停止。
+
+反编译实现与实测一致：`TTSPlayer.onStop(String)` 刷新进度并调用 `nextBag()`；用户控制路径位于 `TTSBookPlayer.pause()/resume()/stop()` 及其父类实现。下一轮改为探测这些低频控制方法，回调探针只保留为诊断证据。
