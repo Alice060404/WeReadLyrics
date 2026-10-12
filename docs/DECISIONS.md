@@ -49,9 +49,10 @@
 
 # ADR-005：P5 先由可见界面启动独立悬浮服务
 
-- **状态：** 实现中
+- **状态：** 模拟模式已验证
 - **日期：** 2026-10-12
 - **决定：** 先实现不接收 Hook 数据的本地模拟悬浮窗。用户从模块 Activity 授予 `SYSTEM_ALERT_WINDOW` 后主动启动 `specialUse` 前台服务；服务暂不导出。
 - **依据：** Android 14 起目标应用必须声明前台服务类型及对应权限；Android 15 起持有悬浮权限也不能在没有可见覆盖层时从后台任意启动前台服务。由可见 Activity 启动可满足系统约束，并将 UI 验证与后续 IPC 隔离。
 - **界面约束：** 使用 `TYPE_APPLICATION_OVERLAY`，最多两行、末尾省略、可拖动并保存位置。模拟文字全部来自模块资源，不读取书籍内容。
 - **资料：** [前台服务类型](https://developer.android.com/develop/background-work/services/fgs/service-types)、[后台启动限制](https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start)、[`TYPE_APPLICATION_OVERLAY`](https://developer.android.com/reference/android/view/WindowManager.LayoutParams#TYPE_APPLICATION_OVERLAY)。
+- **验证结果：** 一加 11 上授权、周期更新、两行省略、屏幕内拖动、跨桌面/浏览器/微信读书显示、通知隐藏和位置恢复均由用户确认正常。
