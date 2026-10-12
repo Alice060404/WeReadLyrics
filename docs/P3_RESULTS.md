@@ -33,3 +33,19 @@ WeReadLyrics 0.3.0 增加 `TTSPlayer.onStart/onPause/onResume/onStop` 回调探�
 实时日志中，高亮 `start` 的字符范围从 `0:10` 连续推进到 `84:115`；暂停附近出现高亮 `stop`，约 8.0 秒后以相同范围 `84:115` 恢复，最终停止后再次出现高亮 `stop`。没有出现 `player_pause` 或 `player_resume`。`player_stop` 在自然换句前反复出现，说明该回调表示单个 utterance 结束，不能表示用户停止。
 
 反编译实现与实测一致：`TTSPlayer.onStop(String)` 刷新进度并调用 `nextBag()`；用户控制路径位于 `TTSBookPlayer.pause()/resume()/stop()` 及其父类实现。下一轮改为探测这些低频控制方法，回调探针只保留为诊断证据。
+
+## 第三轮：控制映射通过，P3 仍为 PARTIAL
+
+WeReadLyrics 0.4.0 改为探测 `TTSBookPlayer` 的低频控制入口。十个 Hook 均成功安装；用户执行开始、暂停、继续和停止后，确认发声、内置高亮和控制均正常。
+
+| 相对时间 | 事件 | 说明 |
+| ---: | --- | --- |
+| 0.000 s | `control_start` | 用户开始朗读 |
+| 2.069—8.777 s | 高亮 `start` | 范围从 `0:10` 推进至 `27:83` |
+| 13.525 s | `control_pause` | 用户暂停 |
+| 13.530 s | 高亮 `stop` | 暂停后清除高亮 |
+| 22.651—22.653 s | `control_stop` + `control_start` | 用户继续，内部以重启播放实现 |
+| 23.292 s | 高亮 `start` | 从 `84:115` 恢复推进 |
+| 31.149 s | `control_pause` | 用户停止本轮朗读 |
+
+控制方法名不能直接等同于产品状态：继续是相邻的 stop+start，暂停和本轮最终停止都可能调用 pause。后续同步核心需结合后续高亮、超时和会话边界归一化事件。P3 在完成连续播放、跳句、切章、前后台和变速样本前保持 `PARTIAL`。
