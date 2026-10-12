@@ -1,12 +1,14 @@
 # WeReadLyrics
 
-计划开发的 Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的悬浮窗显示当前实际读到的句子。项目目前处于 **P1 最小模块真机验证**；现有 APK 只记录脱敏的包/进程加载信息，不包含朗读 Hook 或悬浮窗功能。
+计划开发的 Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的悬浮窗显示当前实际读到的句子。项目目前处于 **P3 只读动态探测**；现有 APK 只记录脱敏的朗读高亮事件，不包含悬浮窗功能，也不改变微信读书行为。
 
 - [完整开发规划](development-guide.md)
 - [阶段与验收](docs/PLAN.md)
 - [当前进度与阻塞](docs/PROGRESS.md)
 - [技术决策与证据](docs/DECISIONS.md)
 - [P1 真机验证步骤](docs/P1_DEVICE_TEST.md)
+- [P2 Hook 调查](docs/HOOK_RESEARCH.md)
+- [P3 真机验证步骤](docs/P3_DEVICE_TEST.md)
 
 当前入口使用设备已确认的 Modern libxposed API 102。P3 只读探测证明文本与实际播放项关联之后，才开发同步悬浮窗功能。
 

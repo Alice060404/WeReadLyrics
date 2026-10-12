@@ -21,18 +21,20 @@
 - 用户人工验证微信读书 AI 朗读能够正常发声，未观察到异常；P1 构建、注入和基础无回归验收完成。
 - 经用户授权拉取微信读书 10.2.2 单一 `base.apk`，校验 ZIP 完整性与 SHA-256，并确认 APK 和反编译树均受 Git 忽略规则保护。
 - 从官方 GitHub Release 安装并校验 JADX 1.5.6；结合 `apkanalyzer` 复核 `classes5.dex` 中的 TTS 模型、播放回调和高亮广播签名，形成 `HOOK_RESEARCH.md`。
+- 实现 P3 第一轮只读探针：精确 Hook 高亮 start/pause/stop，始终执行原调用；日志只记录长度、随机盐短哈希、范围、线程、序号和相对时间。
 
 ## 验证与阻塞
 
-- 主机命令、SDK 已安装包、Wrapper 下载校验与启动均成功；Android 模块已通过编译和静态检查。一加真机仅完成只读基线，Redmi 未连接也未测试。
+- 主机命令、SDK 已安装包、Wrapper 下载校验与启动均成功；Android 模块已通过编译和静态检查。一加已完成 P1 注入与基础回归，Redmi 未连接也未测试。
 - 受限环境内 Linux ADB 不能绑定本地端口；经授权在沙箱外调用 Windows ADB 的路径可用。
 - Gradle/Java 不自动采用 shell 代理变量；当前验证命令显式传递 JVM HTTP/HTTPS 代理。后续应采用不含凭据的本机 Gradle 代理配置或同样的临时 JVM 参数。
 - P0 自动验证与一加只读基线已完成；Redmi 未连接且不在当前阶段测试。
-- Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，本次 SHA-256 为 `8651902da4e3a273be638f75be65fd4dee8b82cb92326418331ea701c9e97fd0`；构建产物受 `.gitignore` 保护。
+- P3 Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.2.0（versionCode 2），SHA-256 为 `1a49ac4db4532740531ace9add01492f9dccf02792b11657ecb702cdf36fb59a`；构建产物受 `.gitignore` 保护。
 - Lint 仅保留一个版本提示：Gradle 8.14.6 已存在。当前继续使用与选定 AGP 8.13.2 官方兼容表一致的 Gradle 8.13。
 - APK 安装、LSPosed 模块识别、作用域和主进程加载日志已通过一加 11 真机验证；日志不含书籍原文。AI 朗读基础无回归由用户人工验证通过，未测试任何字幕同步行为。
 - P2 找到文本与播放状态候选点，但结论仍是静态证据；JADX 报告大量反编译错误，关键签名已用原始 DEX 工具复核。P3 尚未进行真机时序验证。
+- P3 探针 `:app:assembleDebug` 与 `:app:lintDebug` 已通过；尚未更新安装到设备，因此探针加载和朗读时序均未经真机验证。
 
 ## 下一步
 
-实现仅记录长度、短哈希、字符范围和相对时间的 P3 高亮广播探针；编译和静态检查后，经用户许可安装到一加 11 进行 AI 朗读时间线验证。
+取得用户许可后更新安装 P3 APK，由用户重新打开微信读书并执行约 60 秒的 AI 朗读、暂停、继续和停止；读取脱敏日志并给出 PASS/PARTIAL/FAIL 结论。
