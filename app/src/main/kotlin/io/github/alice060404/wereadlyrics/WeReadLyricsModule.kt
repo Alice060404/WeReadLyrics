@@ -46,9 +46,10 @@ class WeReadLyricsModule : XposedModule() {
         try {
             val bagClass = Class.forName(TTS_BAG_CLASS, false, classLoader)
             val broadcasterClass = Class.forName(HIGHLIGHT_BROADCASTER_CLASS, false, classLoader)
+            val playerClass = Class.forName(TTS_PLAYER_CLASS, false, classLoader)
             val textGetter = bagClass.getMethod("getText")
 
-            installProbe(
+            installHighlightProbe(
                 broadcasterClass.getDeclaredMethod(
                     "startHighLight",
                     bagClass,
@@ -58,18 +59,26 @@ class WeReadLyricsModule : XposedModule() {
                 "start",
                 textGetter,
             )
-            installProbe(
+            installHighlightProbe(
                 broadcasterClass.getDeclaredMethod("pauseHighLight", bagClass),
                 "pause",
                 textGetter,
             )
-            installProbe(
+            installHighlightProbe(
                 broadcasterClass.getDeclaredMethod("stopHighLight", bagClass),
                 "stop",
                 textGetter,
             )
+            installLifecycleProbe(playerClass.getDeclaredMethod("onStart", String::class.java), "start")
+            installLifecycleProbe(playerClass.getDeclaredMethod("onPause", String::class.java), "pause")
+            installLifecycleProbe(playerClass.getDeclaredMethod("onResume", String::class.java), "resume")
+            installLifecycleProbe(playerClass.getDeclaredMethod("onStop", String::class.java), "stop")
 
-            log(Log.INFO, LOG_TAG, "Probe install complete: highlight start/pause/stop")
+            log(
+                Log.INFO,
+                LOG_TAG,
+                "Probe install complete: highlight start/pause/stop; player start/pause/resume/stop",
+            )
         } catch (error: Throwable) {
             log(
                 Log.ERROR,
@@ -80,26 +89,38 @@ class WeReadLyricsModule : XposedModule() {
     }
 
     @SuppressLint("NewApi")
-    private fun installProbe(method: Method, event: String, textGetter: Method) {
+    private fun installHighlightProbe(method: Method, event: String, textGetter: Method) {
         hook(method)
-            .setId("$MODULE_ID:$event")
+            .setId("$MODULE_ID:highlight_$event")
             .intercept(
                 XposedInterface.Hooker { chain ->
                     try {
-                        logProbe(event, chain.args, textGetter)
+                        logHighlightProbe(event, chain.args, textGetter)
                     } catch (error: Throwable) {
-                        log(
-                            Log.ERROR,
-                            LOG_TAG,
-                            "Probe observation failed: event=$event, error=${error.javaClass.name}",
-                        )
+                        logObservationFailure("highlight_$event", error)
                     }
                     chain.proceed()
                 },
             )
     }
 
-    private fun logProbe(event: String, args: List<Any?>, textGetter: Method) {
+    @SuppressLint("NewApi")
+    private fun installLifecycleProbe(method: Method, event: String) {
+        hook(method)
+            .setId("$MODULE_ID:player_$event")
+            .intercept(
+                XposedInterface.Hooker { chain ->
+                    try {
+                        logLifecycleProbe(event, chain.args)
+                    } catch (error: Throwable) {
+                        logObservationFailure("player_$event", error)
+                    }
+                    chain.proceed()
+                },
+            )
+    }
+
+    private fun logHighlightProbe(event: String, args: List<Any?>, textGetter: Method) {
         val bag = args.firstOrNull()
         val text = bag?.let { textGetter.invoke(it) as? String }.orEmpty()
         val range = if (event == "start") {
@@ -119,6 +140,28 @@ class WeReadLyricsModule : XposedModule() {
         )
     }
 
+    private fun logLifecycleProbe(event: String, args: List<Any?>) {
+        val utteranceId = args.firstOrNull() as? String ?: ""
+        val sequence = eventSequence.incrementAndGet()
+        val elapsedMs = SystemClock.elapsedRealtime() - probeStartElapsedMs
+
+        log(
+            Log.INFO,
+            LOG_TAG,
+            "Probe event=player_$event, seq=$sequence, elapsedMs=$elapsedMs, " +
+                "utteranceLength=${utteranceId.length}, utteranceToken=${utteranceId.sessionToken()}, " +
+                "thread=${Thread.currentThread().name}",
+        )
+    }
+
+    private fun logObservationFailure(event: String, error: Throwable) {
+        log(
+            Log.ERROR,
+            LOG_TAG,
+            "Probe observation failed: event=$event, error=${error.javaClass.name}",
+        )
+    }
+
     private fun String.sessionToken(): String {
         if (isEmpty()) return "empty"
         val digest = MessageDigest.getInstance("SHA-256")
@@ -134,6 +177,7 @@ class WeReadLyricsModule : XposedModule() {
         const val LOG_TAG = "WeReadLyrics"
         const val MODULE_ID = "io.github.alice060404.wereadlyrics"
         const val TTS_BAG_CLASS = "com.tencent.weread.tts.model.TTSBag"
+        const val TTS_PLAYER_CLASS = "com.tencent.weread.tts.TTSPlayer"
         const val HIGHLIGHT_BROADCASTER_CLASS = "com.tencent.weread.tts.TTSHighLightBroadcaster"
         const val TOKEN_BYTES = 6
 
