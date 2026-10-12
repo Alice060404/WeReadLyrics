@@ -17,6 +17,7 @@
 - `:app:assembleDebug` 与 `:app:lintDebug` 成功；APK 签名、Manifest、入口、模块属性、作用域和 DEX 内容检查通过。
 - 创建提交 `2338575`（`feat: add minimal api 102 module`），固定上述 P1 最小模块及真机测试说明。
 - 经用户授权，通过 ADB 将 Debug APK 安装到一加 11；系统确认包 `io.github.alice060404.wereadlyrics` 版本 0.1.0、versionCode 1，安装成功且尚未启动。
+- 用户在 LSPosed 启用模块、将作用域限定为微信读书并重新打开 App；ADB 日志确认 WeReadLyrics 已加载到 `com.tencent.weread` 主进程，`firstPackage=true`。
 
 ## 验证与阻塞
 
@@ -26,8 +27,8 @@
 - P0 自动验证与一加只读基线已完成；Redmi 未连接且不在当前阶段测试。
 - Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，本次 SHA-256 为 `8651902da4e3a273be638f75be65fd4dee8b82cb92326418331ea701c9e97fd0`；构建产物受 `.gitignore` 保护。
 - Lint 仅保留一个版本提示：Gradle 8.14.6 已存在。当前继续使用与选定 AGP 8.13.2 官方兼容表一致的 Gradle 8.13。
-- APK 已安装；LSPosed 模块识别、作用域、主进程加载日志和微信读书无回归仍未经真机验证。
+- APK 安装、LSPosed 模块识别、作用域和主进程加载日志已通过一加 11 真机验证；日志不含书籍原文。微信读书 AI 朗读无回归仍待人工验证。
 
 ## 下一步
 
-由用户在 LSPosed 中启用模块并将作用域仅设为微信读书；用户重新打开微信读书后，读取脱敏加载日志并验证基本功能无回归。
+由用户在一加 11 启动一次微信读书 AI 朗读，确认播放、暂停、继续和停止仍正常；通过后关闭 P1，并在取得 APK 读取许可后进入 P2 静态分析。
