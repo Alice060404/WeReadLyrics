@@ -4,8 +4,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.ServiceInfo
 import android.graphics.Color
 import android.graphics.PixelFormat
@@ -16,6 +18,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.provider.Settings
 import android.text.TextUtils
+import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -24,13 +27,26 @@ import android.widget.TextView
 
 class OverlayService : Service() {
     private val handler = Handler(Looper.getMainLooper())
+    private val updateLock = Any()
     private lateinit var windowManager: WindowManager
     private var overlayView: TextView? = null
     private var mockIndex = 0
+    private var mode = Mode.OFF
+    private var bridgeBound = false
+    private var pendingUpdate: PlaybackUpdate? = null
+    private var updatePosted = false
+    private var lastSourceInstanceId: Long? = null
+    private var lastSessionId: Long? = null
+    private var lastSequence = Long.MIN_VALUE
+
+    private val bridgeConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) = Unit
+        override fun onServiceDisconnected(name: ComponentName?) = Unit
+    }
 
     private val mockTicker = object : Runnable {
         override fun run() {
-            overlayView?.setText(MOCK_LINES[mockIndex % MOCK_LINES.size])
+            showOverlayText(getString(MOCK_LINES[mockIndex % MOCK_LINES.size]))
             mockIndex += 1
             handler.postDelayed(this, MOCK_INTERVAL_MS)
         }
@@ -40,35 +56,60 @@ class OverlayService : Service() {
         super.onCreate()
         windowManager = getSystemService(WindowManager::class.java)
         createNotificationChannel()
+        PlaybackUpdateBus.consumer = ::enqueuePlaybackUpdate
+        bridgeBound = bindService(
+            Intent(this, PlaybackBridgeService::class.java),
+            bridgeConnection,
+            BIND_AUTO_CREATE,
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_HIDE) {
-            stopSelf()
-            return START_NOT_STICKY
-        }
-
-        startAsForeground()
         if (!Settings.canDrawOverlays(this)) {
             stopSelf()
             return START_NOT_STICKY
         }
-        showOverlay()
+
+        when (intent?.action) {
+            ACTION_SHOW_MOCK -> startMockMode()
+            ACTION_START_LIVE -> startLiveMode()
+            ACTION_HIDE -> stopSelf()
+            else -> stopSelf()
+        }
         return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        mode = Mode.OFF
+        PlaybackUpdateBus.consumer = null
         handler.removeCallbacksAndMessages(null)
-        overlayView?.let { view ->
-            runCatching { windowManager.removeView(view) }
+        hideOverlayView()
+        if (bridgeBound) {
+            runCatching { unbindService(bridgeConnection) }
+            bridgeBound = false
         }
-        overlayView = null
         super.onDestroy()
     }
 
-    private fun startAsForeground() {
+    private fun startMockMode() {
+        mode = Mode.MOCK
+        startAsForeground(R.string.overlay_notification_mock)
+        mockIndex = 0
+        handler.removeCallbacks(mockTicker)
+        mockTicker.run()
+    }
+
+    private fun startLiveMode() {
+        mode = Mode.LIVE
+        startAsForeground(R.string.overlay_notification_live)
+        handler.removeCallbacks(mockTicker)
+        hideOverlayView()
+        resetOrdering()
+    }
+
+    private fun startAsForeground(notificationText: Int) {
         val openApp = PendingIntent.getActivity(
             this,
             0,
@@ -89,7 +130,7 @@ class OverlayService : Service() {
         val notification = notificationBuilder
             .setSmallIcon(R.drawable.ic_module)
             .setContentTitle(getString(R.string.overlay_notification_title))
-            .setContentText(getString(R.string.overlay_notification_text))
+            .setContentText(getString(notificationText))
             .setContentIntent(openApp)
             .setOngoing(true)
             .addAction(
@@ -112,10 +153,70 @@ class OverlayService : Service() {
         }
     }
 
-    private fun showOverlay() {
-        if (overlayView != null) return
+    private fun enqueuePlaybackUpdate(update: PlaybackUpdate) {
+        synchronized(updateLock) {
+            pendingUpdate = update
+            if (updatePosted) return
+            updatePosted = true
+        }
+        handler.post(::consumeLatestPlaybackUpdate)
+    }
+
+    private fun consumeLatestPlaybackUpdate() {
+        val update = synchronized(updateLock) {
+            updatePosted = false
+            pendingUpdate.also { pendingUpdate = null }
+        } ?: return
+        if (mode != Mode.LIVE || !acceptOrdering(update)) return
+
+        when (update.status) {
+            PlaybackIpcProtocol.STATUS_PLAYING -> {
+                if (update.text.isEmpty()) hideOverlayView() else showOverlayText(update.text, 1f)
+            }
+
+            PlaybackIpcProtocol.STATUS_PAUSED -> {
+                if (update.text.isEmpty()) hideOverlayView() else showOverlayText(update.text, PAUSED_ALPHA)
+            }
+
+            PlaybackIpcProtocol.STATUS_IDLE,
+            PlaybackIpcProtocol.STATUS_BUFFERING,
+            -> hideOverlayView()
+        }
+        Log.i(
+            LOG_TAG,
+            "Overlay applied: session=${update.sessionId}, seq=${update.sequence}, " +
+                "status=${update.status}, textLength=${update.text.length}",
+        )
+    }
+
+    private fun acceptOrdering(update: PlaybackUpdate): Boolean {
+        if (lastSourceInstanceId != update.sourceInstanceId || lastSessionId != update.sessionId) {
+            lastSourceInstanceId = update.sourceInstanceId
+            lastSessionId = update.sessionId
+            lastSequence = update.sequence
+            return true
+        }
+        if (update.sequence <= lastSequence) return false
+        lastSequence = update.sequence
+        return true
+    }
+
+    private fun resetOrdering() {
+        lastSourceInstanceId = null
+        lastSessionId = null
+        lastSequence = Long.MIN_VALUE
+    }
+
+    private fun showOverlayText(text: String, alpha: Float = 1f) {
+        overlayView?.let { view ->
+            view.text = text
+            view.alpha = alpha
+            return
+        }
 
         val view = TextView(this).apply {
+            this.text = text
+            this.alpha = alpha
             setTextColor(Color.WHITE)
             textSize = 18f
             gravity = Gravity.CENTER
@@ -148,9 +249,11 @@ class OverlayService : Service() {
 
         windowManager.addView(view, parameters)
         overlayView = view
-        mockIndex = 0
-        handler.removeCallbacks(mockTicker)
-        mockTicker.run()
+    }
+
+    private fun hideOverlayView() {
+        overlayView?.let { view -> runCatching { windowManager.removeView(view) } }
+        overlayView = null
     }
 
     private fun installDragHandler(view: View, parameters: WindowManager.LayoutParams) {
@@ -209,16 +312,25 @@ class OverlayService : Service() {
     private val Int.dp: Int
         get() = (this * resources.displayMetrics.density).toInt()
 
+    private enum class Mode {
+        OFF,
+        MOCK,
+        LIVE,
+    }
+
     companion object {
         private const val ACTION_SHOW_MOCK = "io.github.alice060404.wereadlyrics.action.SHOW_MOCK"
+        private const val ACTION_START_LIVE = "io.github.alice060404.wereadlyrics.action.START_LIVE"
         private const val ACTION_HIDE = "io.github.alice060404.wereadlyrics.action.HIDE"
         private const val CHANNEL_ID = "overlay"
         private const val NOTIFICATION_ID = 1
         private const val MOCK_INTERVAL_MS = 3_000L
         private const val OVERLAY_WIDTH_RATIO = 0.88
+        private const val PAUSED_ALPHA = 0.65f
         private const val PREFERENCES_NAME = "overlay_position"
         private const val PREF_X = "x"
         private const val PREF_Y = "y"
+        private const val LOG_TAG = "WeReadLyrics"
 
         private val MOCK_LINES = intArrayOf(
             R.string.mock_line_first,
@@ -228,5 +340,8 @@ class OverlayService : Service() {
 
         fun showMockIntent(context: Context): Intent =
             Intent(context, OverlayService::class.java).setAction(ACTION_SHOW_MOCK)
+
+        fun startLiveIntent(context: Context): Intent =
+            Intent(context, OverlayService::class.java).setAction(ACTION_START_LIVE)
     }
 }

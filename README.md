@@ -12,6 +12,7 @@
 - [P4 日志层同步验证](docs/P4_DEVICE_TEST.md)
 - [P4 验证结果](docs/P4_RESULTS.md)
 - [P5 模拟悬浮窗验证步骤](docs/P5_DEVICE_TEST.md)
+- [P5 实时字幕与 IPC 验证步骤](docs/P5_LIVE_DEVICE_TEST.md)
 
 当前入口使用设备已确认的 Modern libxposed API 102。P3 已在一加 11 上证明高亮文本与实际播放项关联；P4 已通过 22 项 JVM 测试和日志层真机验证。
 

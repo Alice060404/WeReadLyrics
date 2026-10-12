@@ -1,6 +1,6 @@
 # 开发进度
 
-更新：2026-10-12。当前：P4 已通过；P5 模拟悬浮窗已通过，开始受保护 IPC。
+更新：2026-10-12。当前：P4 已通过；P5 受保护 IPC 已通过自动验证，待一加真机验证。
 
 ## 已完成
 
@@ -48,6 +48,9 @@
 - 0.6.0 的 22 项 core 测试、Debug 构建和 lint 均通过；APK 为 v2 签名，Manifest 与版本检查通过。真机模拟模式尚未验证。
 - 经用户授权将 0.6.0 覆盖安装到一加 11；ADB 报告安装成功，设备确认 versionCode 6、versionName 0.6.0、targetSdk 36 及预期的悬浮窗/前台服务/通知权限声明。
 - 用户在一加 11 确认 0.6.0 的授权路径、三条文字更新、两行省略、拖动、跨桌面/浏览器/微信读书显示、通知隐藏和位置恢复均正常；P5 模拟模式结论为 `PASS`。
+- P5 0.7.0 将私有悬浮服务与导出 Binder Bridge 分离；AIDL 使用单向调用，Bridge 逐次校验 UID、固定包名和设备 APK 实测证书，Hook 不自动创建服务。正文只在内存传递且限制为 4096 字符。
+- 通过微信读书实际 Manifest 与 DEX 确认 `WRApplication` 的 Tinker 父链及 `TinkerApplication.getInstance()`，Hook 在真实高亮事件发生后用它取得 Context 并绑定已运行 Bridge，未编造业务类或字段。
+- 0.7.0 的 25 项 core 测试、Debug 构建和 lint 均通过；lint 仅保留既有 Gradle 版本提示。APK 为 v2 签名，AIDL、Bridge、客户端及 core 均存在于 DEX，libxposed 仍仅为外部引用。
 
 ## 验证与阻塞
 
@@ -65,7 +68,8 @@
 - `./gradlew test :app:assembleDebug :app:lintDebug --offline --no-daemon` 成功；新增 `core` 未破坏 Android 模块。首次离线解析因缺少 Kotlin JVM 插件标记失败，随后从项目已配置的官方仓库解析 2.3.0，后续离线测试通过。
 - P4 真机证据只保留脱敏事件摘要；未记录正文、书名、原始 utteranceId 或章节号。人工验证证明无可见回归，不等同于毫秒级同步精度测量。
 - P5 当前 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.6.0（versionCode 6），SHA-256 为 `5bc43dbf892b76de12c8d8bc57bc2e2b4ff73d095bac669380f71b34a62531ed`。
+- P5 实时模式 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.7.0（versionCode 7），SHA-256 为 `9fc1a4a6d4a709bcc47eaca048f0b0984e24dc8c895d88e65f06ce47e598462e`；尚未安装。
 
 ## 下一步
 
-实现由真实微信读书 UID 与签名校验保护的 Binder IPC，把 P4 标准状态接入已由用户启动的悬浮服务。
+完成 0.7.0 自动检查后，按 `P5_LIVE_DEVICE_TEST.md` 验证真实字幕、鉴权和生命周期。

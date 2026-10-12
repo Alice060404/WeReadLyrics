@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <queries>
+        <package android:name="com.tencent.weread" />
+    </queries>
 
     <application
         android:allowBackup="false"
@@ -32,5 +37,11 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="User-enabled floating text synchronized with local text-to-speech playback" />
         </service>
+
+        <!-- WeRead cannot hold a module signature permission; every Binder call verifies UID and certificate. -->
+        <service
+            android:name=".PlaybackBridgeService"
+            android:exported="true"
+            tools:ignore="ExportedService" />
     </application>
 </manifest>

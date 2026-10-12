@@ -14,6 +14,7 @@ import io.github.alice060404.wereadlyrics.core.PlaybackStateMachine
 
 internal class SyncObserver(
     private val logger: (String) -> Unit,
+    private val stateSink: (io.github.alice060404.wereadlyrics.core.PlaybackState) -> Unit = {},
 ) {
     private val adapter = ObservedPlaybackAdapter(
         restartWindowMs = RESTART_WINDOW_MS,
@@ -87,6 +88,7 @@ internal class SyncObserver(
 
     private fun reduceToLog(event: PlaybackEvent): String {
         val state = stateMachine.accept(event)
+        stateSink(state)
         val current = state.current
         val range = current?.let { "${it.sourceStart}:${it.sourceEndInclusive}" } ?: "none"
         return "Sync event=${event.javaClass.simpleName}, session=${event.sessionId}, " +

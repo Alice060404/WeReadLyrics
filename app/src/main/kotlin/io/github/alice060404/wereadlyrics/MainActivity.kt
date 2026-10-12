@@ -63,7 +63,8 @@ class MainActivity : Activity() {
 
         content.addView(actionButton(R.string.grant_overlay_permission) { openOverlaySettings() }, matchWrap())
         content.addView(actionButton(R.string.show_mock_overlay) { showMockOverlay() }, matchWrap())
-        content.addView(actionButton(R.string.hide_mock_overlay) { hideMockOverlay() }, matchWrap())
+        content.addView(actionButton(R.string.start_live_overlay) { startLiveOverlay() }, matchWrap())
+        content.addView(actionButton(R.string.hide_overlay) { hideOverlay() }, matchWrap())
 
         content.addView(TextView(this).apply {
             setText(R.string.screen_hint)
@@ -103,7 +104,20 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun hideMockOverlay() {
+    private fun startLiveOverlay() {
+        if (!Settings.canDrawOverlays(this)) {
+            openOverlaySettings()
+            return
+        }
+        val intent = OverlayService.startLiveIntent(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
+    private fun hideOverlay() {
         stopService(Intent(this, OverlayService::class.java))
     }
 

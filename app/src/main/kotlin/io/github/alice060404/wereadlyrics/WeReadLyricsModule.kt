@@ -2,6 +2,7 @@ package io.github.alice060404.wereadlyrics
 
 import android.app.Application
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
 import android.os.SystemClock
 import android.util.Log
@@ -17,7 +18,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 class WeReadLyricsModule : XposedModule() {
-    private val syncObserver = SyncObserver { message -> log(Log.INFO, LOG_TAG, message) }
+    private val ipcClient = PlaybackIpcClient { message -> log(Log.INFO, LOG_TAG, message) }
+    private val syncObserver = SyncObserver(
+        logger = { message -> log(Log.INFO, LOG_TAG, message) },
+        stateSink = ipcClient::publish,
+    )
 
     override fun onPackageLoaded(param: PackageLoadedParam) {
         if (param.packageName != TARGET_PACKAGE) return
@@ -56,6 +61,8 @@ class WeReadLyricsModule : XposedModule() {
                 utteranceGetter = bagClass.getMethod("getUtteranceId"),
                 bookBagClass = bookBagClass,
                 chapterGetter = bookBagClass.getMethod("getChapterUid"),
+                applicationGetter = Class.forName(TINKER_APPLICATION_CLASS, false, classLoader)
+                    .getMethod("getInstance"),
             )
 
             installHighlightProbe(
@@ -154,6 +161,7 @@ class WeReadLyricsModule : XposedModule() {
         )
 
         if (event == "start") {
+            connectIpc(accessors)
             val sourceStart = args.getOrNull(1) as? Int ?: return
             val sourceEndInclusive = args.getOrNull(2) as? Int ?: return
             val chapterId = if (bag != null && accessors.bookBagClass.isInstance(bag)) {
@@ -205,6 +213,19 @@ class WeReadLyricsModule : XposedModule() {
         )
     }
 
+    private fun connectIpc(accessors: HighlightAccessors) {
+        try {
+            val context = accessors.applicationGetter.invoke(null) as? Context ?: return
+            ipcClient.connect(context)
+        } catch (error: Throwable) {
+            log(
+                Log.WARN,
+                LOG_TAG,
+                "IPC context unavailable: error=${error.javaClass.name}",
+            )
+        }
+    }
+
     private fun String.sessionToken(): String {
         if (isEmpty()) return "empty"
         val digest = MessageDigest.getInstance("SHA-256")
@@ -223,6 +244,7 @@ class WeReadLyricsModule : XposedModule() {
         const val TTS_BOOK_BAG_CLASS = "com.tencent.weread.tts.model.TTSBookBag"
         const val TTS_BOOK_PLAYER_CLASS = "com.tencent.weread.tts.TTSBookPlayer"
         const val HIGHLIGHT_BROADCASTER_CLASS = "com.tencent.weread.tts.TTSHighLightBroadcaster"
+        const val TINKER_APPLICATION_CLASS = "com.tencent.tinker.loader.app.TinkerApplication"
         const val TOKEN_BYTES = 6
 
         val probesInstalled = AtomicBoolean(false)
@@ -236,5 +258,6 @@ class WeReadLyricsModule : XposedModule() {
         val utteranceGetter: Method,
         val bookBagClass: Class<*>,
         val chapterGetter: Method,
+        val applicationGetter: Method,
     )
 }
