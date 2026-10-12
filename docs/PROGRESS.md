@@ -31,6 +31,7 @@
 - 0.3.0 第二轮实测中，用户确认发声、高亮、暂停、继续和停止均正常；日志未出现 callback pause/resume，callback stop 在每个 utterance 结束时触发，因此仍为 `PARTIAL`。
 - 原始 DEX 核实 `TTSBookPlayer` 的七个低频控制方法；0.4.0 将探针移到 start/pause/resume/stop/seek/foreAhead/foreBack，并移除易误判的 callback 生命周期探针。
 - 0.4.0 已通过离线 `:app:assembleDebug` 和 `:app:lintDebug`；APK 版本、API 102 模块元数据、v2 调试签名及 `compileOnly` 打包边界检查通过。
+- 经用户授权将 0.4.0 覆盖安装到一加 11；Android 包管理器报告安装成功，并确认 versionCode 4、versionName 0.4.0。
 
 ## 验证与阻塞
 
@@ -38,7 +39,7 @@
 - 受限环境内 Linux ADB 不能绑定本地端口；经授权在沙箱外调用 Windows ADB 的路径可用。
 - Gradle/Java 不自动采用 shell 代理变量；当前验证命令显式传递 JVM HTTP/HTTPS 代理。后续应采用不含凭据的本机 Gradle 代理配置或同样的临时 JVM 参数。
 - P0 自动验证与一加只读基线已完成；Redmi 未连接且不在当前阶段测试。
-- 当前 P3 Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.4.0（versionCode 4），SHA-256 为 `ea714374ee7126be769339df4b59f74f95b868be7f0c70dc3eeca87e60af0811`；构建产物受 `.gitignore` 保护，尚未安装到设备。一加 11 当前安装版本仍为 0.3.0。
+- 当前 P3 Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.4.0（versionCode 4），SHA-256 为 `ea714374ee7126be769339df4b59f74f95b868be7f0c70dc3eeca87e60af0811`；构建产物受 `.gitignore` 保护，已安装到一加 11。
 - Lint 仅保留一个版本提示：Gradle 8.14.6 已存在。当前继续使用与选定 AGP 8.13.2 官方兼容表一致的 Gradle 8.13。
 - APK 安装、LSPosed 模块识别、作用域和主进程加载日志已通过一加 11 真机验证；日志不含书籍原文。AI 朗读基础无回归由用户人工验证通过，未测试任何字幕同步行为。
 - P2 找到文本与播放状态候选点；JADX 报告大量反编译错误，关键签名已用原始 DEX 工具复核。P3 已完成第一轮真机时序验证，结论为 `PARTIAL`。
@@ -47,4 +48,4 @@
 
 ## 下一步
 
-经用户许可将 0.4.0 覆盖安装到一加 11，确认十个 Hook 后补测连续播放、跳句、切章、前后台和变速。
+重新打开微信读书并确认 0.4.0 的十个 Hook；随后补测连续播放、跳句、切章、前后台和变速。
