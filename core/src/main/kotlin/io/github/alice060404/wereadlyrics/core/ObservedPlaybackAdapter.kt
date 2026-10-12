@@ -57,7 +57,7 @@ class ObservedPlaybackAdapter(
         ensureSession(observed.chapterId, output)
         val activeSession = sessionId ?: return
 
-        if (observed.chapterId != null && chapterId != null && observed.chapterId != chapterId) {
+        if (observed.chapterId != null && observed.chapterId != chapterId) {
             emit(output) { eventSequence ->
                 ChapterChanged(activeSession, eventSequence, observed.chapterId)
             }

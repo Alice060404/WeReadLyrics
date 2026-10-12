@@ -145,6 +145,19 @@ class ObservedPlaybackAdapterTest {
         assertTrue(events.isEmpty())
     }
 
+    @Test
+    fun firstHighlightFillsChapterMissingFromControlStart() {
+        val adapter = adapter()
+        val machine = PlaybackStateMachine()
+        adapter.accept(ControlObserved(0, ControlAction.START)).forEach(machine::accept)
+
+        adapter.accept(highlight(100, "one", "first", 0, 4, "chapter-1"))
+            .forEach(machine::accept)
+
+        assertEquals("chapter-1", machine.snapshot().chapterId)
+        assertEquals("first", machine.snapshot().current?.text)
+    }
+
     private fun adapter() = ObservedPlaybackAdapter(
         restartWindowMs = 1_000,
         idleStopTimeoutMs = 3_000,
