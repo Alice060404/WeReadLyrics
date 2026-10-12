@@ -32,8 +32,16 @@
 
 # ADR-003：P3 优先探测现有 TTS 高亮广播链
 
-- **状态：** 已决定，等待动态验证
+- **状态：** 已验证
 - **日期：** 2026-10-12
 - **决定：** P3 第一轮只读探测 `TTSHighLightBroadcaster.startHighLight/pauseHighLight/stopHighLight`。不从 Android `TextToSpeech` 开始，也不先 Hook 底层 `AudioTrack`。
 - **依据：** 微信读书 10.2.2 的原始 DEX 确认高亮方法接收 `TTSBag` 与字符范围；静态调用链把它连接到在线/离线 WXTTS 播放进度。系统 `TextToSpeech` 的直接调用属于局部发音流程。
-- **边界：** 当前只证明类、签名和静态调用关系存在。AI 朗读实际调用、线程、频率、预取影响和时序准确度必须在一加 11 上验证。
+- **结果：** 一加 11 综合时间轴与人工观察确认 start 高亮随实际发声推进，跳转和切章后能重置到新文本范围。人工观察不能给出毫秒级误差。
+
+# ADR-004：P4 以高亮事件为文本真值并归一化控制组合
+
+- **状态：** 已决定
+- **日期：** 2026-10-12
+- **决定：** `TTSHighLightBroadcaster.startHighLight` 作为当前文本与范围事件源；pause/stop 高亮及 `TTSBookPlayer` 控制方法作为状态提示，不把单个 Java 方法名直接映射成产品状态。
+- **依据：** 真机中暂停可表现为 control pause，继续可表现为相邻 control stop+start 或 start+resume，最终停止也可能表现为 pause。所有场景中，后续高亮是否恢复及文本 token/范围是否重置能可靠反映播放会话变化。
+- **实现约束：** P4 使用单调序号、有界状态和显式会话重置；用 JVM 测试覆盖预取、乱序、暂停、继续、停止、跳转与切章。不得依据未出现的 callback pause/resume 推断状态。
