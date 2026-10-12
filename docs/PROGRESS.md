@@ -15,10 +15,11 @@
 - 从 Maven Central 获取并校验 libxposed API 102 AAR，检查实际接口后确定 P1 使用 Modern API 102；不混用 Legacy API。
 - 创建最小 Android/LSPosed 模块：API 102 入口、静态微信读书作用域、脱敏包/进程加载日志，不包含业务 Hook。
 - `:app:assembleDebug` 与 `:app:lintDebug` 成功；APK 签名、Manifest、入口、模块属性、作用域和 DEX 内容检查通过。
+- 创建提交 `2338575`（`feat: add minimal api 102 module`），固定上述 P1 最小模块及真机测试说明。
 
 ## 验证与阻塞
 
-- 主机命令、SDK 已安装包、Wrapper 下载校验与启动均成功。尚无 Android 模块，因此 APK 编译和自动测试未执行；一加真机仅完成只读基线，Redmi 未连接也未测试。
+- 主机命令、SDK 已安装包、Wrapper 下载校验与启动均成功；Android 模块已通过编译和静态检查。一加真机仅完成只读基线，Redmi 未连接也未测试。
 - 受限环境内 Linux ADB 不能绑定本地端口；经授权在沙箱外调用 Windows ADB 的路径可用。
 - Gradle/Java 不自动采用 shell 代理变量；当前验证命令显式传递 JVM HTTP/HTTPS 代理。后续应采用不含凭据的本机 Gradle 代理配置或同样的临时 JVM 参数。
 - P0 自动验证与一加只读基线已完成；Redmi 未连接且不在当前阶段测试。
