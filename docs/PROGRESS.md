@@ -23,6 +23,7 @@
 - 从官方 GitHub Release 安装并校验 JADX 1.5.6；结合 `apkanalyzer` 复核 `classes5.dex` 中的 TTS 模型、播放回调和高亮广播签名，形成 `HOOK_RESEARCH.md`。
 - 实现 P3 第一轮只读探针：精确 Hook 高亮 start/pause/stop，始终执行原调用；日志只记录长度、随机盐短哈希、范围、线程、序号和相对时间。
 - 经用户授权在一加 11 覆盖安装 P3 Debug APK；系统确认模块已更新为 0.2.0（versionCode 2）。
+- 完成两轮朗读探测；实时日志和用户人工观察支持高亮事件对应实际发声，但暂停与停止均表现为 stop，第一轮结论为 `PARTIAL`，详见 `P3_RESULTS.md`。
 
 ## 验证与阻塞
 
@@ -33,9 +34,10 @@
 - P3 Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.2.0（versionCode 2），SHA-256 为 `1a49ac4db4532740531ace9add01492f9dccf02792b11657ecb702cdf36fb59a`；构建产物受 `.gitignore` 保护。
 - Lint 仅保留一个版本提示：Gradle 8.14.6 已存在。当前继续使用与选定 AGP 8.13.2 官方兼容表一致的 Gradle 8.13。
 - APK 安装、LSPosed 模块识别、作用域和主进程加载日志已通过一加 11 真机验证；日志不含书籍原文。AI 朗读基础无回归由用户人工验证通过，未测试任何字幕同步行为。
-- P2 找到文本与播放状态候选点，但结论仍是静态证据；JADX 报告大量反编译错误，关键签名已用原始 DEX 工具复核。P3 尚未进行真机时序验证。
-- P3 探针 `:app:assembleDebug` 与 `:app:lintDebug` 已通过并安装；微信读书尚未在更新后重新打开，因此探针加载和朗读时序仍未经真机验证。
+- P2 找到文本与播放状态候选点；JADX 报告大量反编译错误，关键签名已用原始 DEX 工具复核。P3 已完成第一轮真机时序验证，结论为 `PARTIAL`。
+- P3 探针 `:app:assembleDebug` 与 `:app:lintDebug` 已通过并安装；微信读书重新打开后确认三个高亮 Hook 安装成功。
+- P3 探针已在真机成功加载且未观察到宿主回归；当前缺少可区分的暂停/继续生命周期事件及扩展场景测试，不能关闭 P3。
 
 ## 下一步
 
-由用户确认 LSPosed 模块仍启用、重新打开微信读书，并执行约 60 秒的 AI 朗读、暂停、继续和停止；读取脱敏日志并给出 PASS/PARTIAL/FAIL 结论。
+增加 `TTSPlayer` start/pause/resume/stop 只读生命周期探针，构建验证后再经用户许可更新安装；随后补测连续播放、跳句、切章、前后台和变速。
