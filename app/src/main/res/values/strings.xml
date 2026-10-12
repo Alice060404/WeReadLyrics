@@ -2,4 +2,18 @@
 <resources>
     <string name="app_name">WeReadLyrics</string>
     <string name="module_description">显示微信读书 AI 朗读当前文字的悬浮窗模块</string>
+    <string name="overlay_channel_name">悬浮字幕</string>
+    <string name="overlay_notification_title">悬浮字幕正在运行</string>
+    <string name="overlay_notification_text">本地模拟模式；点按可返回设置</string>
+    <string name="overlay_notification_stop">隐藏</string>
+    <string name="screen_intro">P5 本地模拟字幕\n先验证悬浮窗显示、两行省略和拖动，不读取微信读书正文。</string>
+    <string name="overlay_permission_granted">悬浮窗权限：已授予</string>
+    <string name="overlay_permission_missing">悬浮窗权限：未授予</string>
+    <string name="grant_overlay_permission">授予悬浮窗权限</string>
+    <string name="show_mock_overlay">显示模拟字幕</string>
+    <string name="hide_mock_overlay">隐藏模拟字幕</string>
+    <string name="screen_hint">显示后可切到桌面或其他应用，并拖动字幕条。长文本会限制为两行并在末尾省略。</string>
+    <string name="mock_line_first">本地模拟字幕：第一句会每三秒更新。</string>
+    <string name="mock_line_drag">可以把字幕拖到屏幕上的合适位置。</string>
+    <string name="mock_line_long">这是一段用于验证两行限制和长文本末尾省略策略的本地模拟文字，它不会读取或传输任何微信读书正文内容。</string>
 </resources>

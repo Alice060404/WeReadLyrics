@@ -46,3 +46,12 @@
 - **依据：** 真机中暂停可表现为 control pause，继续可表现为相邻 control stop+start 或 start+resume，最终停止也可能表现为 pause。所有场景中，后续高亮是否恢复及文本 token/范围是否重置能可靠反映播放会话变化。
 - **实现约束：** P4 使用单调序号、有界状态和显式会话重置；用 JVM 测试覆盖预取、乱序、暂停、继续、停止、跳转与切章。不得依据未出现的 callback pause/resume 推断状态。stop+start 合并窗口和暂停清理超时由接入层显式提供，在真机验证前不固化为产品常量。
 - **验证结果：** 一加 11 的 0.5.0 标准事件从序号 1 单调推进到 30；跳转、切章和停止均清除了旧项，最终进入 `IDLE` 且正文长度归零。1 秒合并窗口和 15 秒清理超时仅作为当前诊断值保留。
+
+# ADR-005：P5 先由可见界面启动独立悬浮服务
+
+- **状态：** 实现中
+- **日期：** 2026-10-12
+- **决定：** 先实现不接收 Hook 数据的本地模拟悬浮窗。用户从模块 Activity 授予 `SYSTEM_ALERT_WINDOW` 后主动启动 `specialUse` 前台服务；服务暂不导出。
+- **依据：** Android 14 起目标应用必须声明前台服务类型及对应权限；Android 15 起持有悬浮权限也不能在没有可见覆盖层时从后台任意启动前台服务。由可见 Activity 启动可满足系统约束，并将 UI 验证与后续 IPC 隔离。
+- **界面约束：** 使用 `TYPE_APPLICATION_OVERLAY`，最多两行、末尾省略、可拖动并保存位置。模拟文字全部来自模块资源，不读取书籍内容。
+- **资料：** [前台服务类型](https://developer.android.com/develop/background-work/services/fgs/service-types)、[后台启动限制](https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start)、[`TYPE_APPLICATION_OVERLAY`](https://developer.android.com/reference/android/view/WindowManager.LayoutParams#TYPE_APPLICATION_OVERLAY)。
