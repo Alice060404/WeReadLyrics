@@ -23,3 +23,9 @@
 - 提权后的 Windows ADB 已确认一加 11 为 `device`。只读基线：产品/型号 `PHB110`、Android API 36、ABI `arm64-v8a`。
 - 设备实测微信读书包名为 `com.tencent.weread`，`versionName=10.2.2`、`versionCode=10167650`、`minSdk=24`、`targetSdk=33`。检查时主进程未运行；APK 位于系统应用数据目录，未拉取或提交。
 - `wslpath -w` 可转换构建产物路径，后续安装前仍须获得用户许可。
+
+## P1 最小模块边界
+
+- 固定应用 ID/命名空间为 `io.github.alice060404.wereadlyrics`，`minSdk=24`、`targetSdk=36`、`compileSdk=36`。
+- 模块入口只处理静态作用域中的 `com.tencent.weread`，记录包名、进程名和首次加载标志；不 Hook 任何方法，不读取文本，不改变宿主返回值。
+- 模块数据禁止云备份和设备迁移。API 102 依赖为 `compileOnly`；APK DEX 检查确认未打包 `io.github.libxposed` 或 Legacy XposedBridge 实现类。

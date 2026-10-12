@@ -13,6 +13,8 @@
 - 创建首个仓库提交 `93ac748`（`chore: establish project baseline`），包含规划、环境证据、忽略规则和已验证的 Gradle Wrapper。
 - 检查用户提供的本地截图，确认一加 11 的 LSPosed 2.1.1 (7790) 已激活并报告 API 102；Root 环境为 SukiSU 4.2.0 与 Zygisk Next。
 - 从 Maven Central 获取并校验 libxposed API 102 AAR，检查实际接口后确定 P1 使用 Modern API 102；不混用 Legacy API。
+- 创建最小 Android/LSPosed 模块：API 102 入口、静态微信读书作用域、脱敏包/进程加载日志，不包含业务 Hook。
+- `:app:assembleDebug` 与 `:app:lintDebug` 成功；APK 签名、Manifest、入口、模块属性、作用域和 DEX 内容检查通过。
 
 ## 验证与阻塞
 
@@ -20,8 +22,10 @@
 - 受限环境内 Linux ADB 不能绑定本地端口；经授权在沙箱外调用 Windows ADB 的路径可用。
 - Gradle/Java 不自动采用 shell 代理变量；当前验证命令显式传递 JVM HTTP/HTTPS 代理。后续应采用不含凭据的本机 Gradle 代理配置或同样的临时 JVM 参数。
 - P0 自动验证与一加只读基线已完成；Redmi 未连接且不在当前阶段测试。
-- P1 尚未创建 Android 模块、编译 APK 或进行真机注入验证。
+- Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，本次 SHA-256 为 `8651902da4e3a273be638f75be65fd4dee8b82cb92326418331ea701c9e97fd0`；构建产物受 `.gitignore` 保护。
+- Lint 仅保留一个版本提示：Gradle 8.14.6 已存在。当前继续使用与选定 AGP 8.13.2 官方兼容表一致的 Gradle 8.13。
+- APK 尚未安装；LSPosed 模块识别、作用域、主进程加载日志和微信读书无回归均未经真机验证。
 
 ## 下一步
 
-创建 API 102 最小模块，完成构建和 APK 结构检查；安装、启用作用域及重启微信读书前向用户说明影响并取得许可。
+取得用户许可后仅在一加 11 安装 Debug APK，由用户在 LSPosed 中启用模块及微信读书作用域；重启微信读书后读取脱敏加载日志并验证基本功能无回归。
