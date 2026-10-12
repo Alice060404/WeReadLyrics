@@ -44,4 +44,4 @@
 - **日期：** 2026-10-12
 - **决定：** `TTSHighLightBroadcaster.startHighLight` 作为当前文本与范围事件源；pause/stop 高亮及 `TTSBookPlayer` 控制方法作为状态提示，不把单个 Java 方法名直接映射成产品状态。
 - **依据：** 真机中暂停可表现为 control pause，继续可表现为相邻 control stop+start 或 start+resume，最终停止也可能表现为 pause。所有场景中，后续高亮是否恢复及文本 token/范围是否重置能可靠反映播放会话变化。
-- **实现约束：** P4 使用单调序号、有界状态和显式会话重置；用 JVM 测试覆盖预取、乱序、暂停、继续、停止、跳转与切章。不得依据未出现的 callback pause/resume 推断状态。
+- **实现约束：** P4 使用单调序号、有界状态和显式会话重置；用 JVM 测试覆盖预取、乱序、暂停、继续、停止、跳转与切章。不得依据未出现的 callback pause/resume 推断状态。stop+start 合并窗口和暂停清理超时由接入层显式提供，在真机验证前不固化为产品常量。
