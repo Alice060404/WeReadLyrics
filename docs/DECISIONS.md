@@ -13,6 +13,7 @@
 
 - 用户提供的管理界面版本为 `2.1.1 (7790)`；尚无设备端分支、构建来源或 API 能力证据，因此**暂不选择 Modern libxposed 或 Legacy XposedBridge，不创建模块入口**。
 - [LSPosed Modern API 官方 Wiki](https://github.com/LSPosed/LSPosed/wiki/Develop-Xposed-Modules-Using-Modern-Xposed-API)说明现代入口为 `META-INF/xposed/java_init.list`、作用域为 `META-INF/xposed/scope.list`，与传统 `assets/xposed_init` 不同；这只是 API 差异，不代表当前设备兼容。
+- 无 Root 的设备包与系统属性查询没有暴露 LSPosed 管理器或框架标识；隐藏/寄生式管理器可能不会作为普通第三方包出现。公开网络中相同版本号存在不同分发来源，仅凭 `2.1.1 (7790)` 文件名仍不能判定设备安装来源。
 - 待取得一加 11 的 LSPosed 管理器关于框架分支、来源、构建信息及 API 支持的只读证据，再选模块 API。Redmi 的能力须单独验证。
 
 ## P0 ADB 路径
