@@ -59,10 +59,11 @@
 
 # ADR-006：P5 使用逐次鉴权的单向 Binder IPC
 
-- **状态：** 已实现，待真机验证
+- **状态：** 基本链路已验证，完整验收待完成
 - **日期：** 2026-10-12
 - **决定：** 私有 `OverlayService` 只接受模块自身的显式启动；单独导出的 `PlaybackBridgeService` 提供单向 AIDL。每次 Binder 方法调用都用调用 UID 反查包名，并校验微信读书签名证书 SHA-256。
 - **依据：** 微信读书 10.2.2 的设备 APK 实测证书摘要为 `e4dd2f049941989ffafa45aef52eda9701372c27bc1708e89c217935140bfa1c`。签名权限不可用，因为微信读书与模块并非同一签名。仅检查包名不足以识别侧载仿冒包。
 - **生命周期：** 用户必须先从可见 Activity 启动实时模式；私有悬浮服务随后保持 Bridge 存活。Hook 客户端不用 `BIND_AUTO_CREATE`，因此不能在后台自行创建服务或窗口。
 - **数据边界：** AIDL 只传当前标准状态和最多 4096 字符的当前项；不传整章，不写磁盘，不发广播。单向调用避免阻塞微信读书线程，服务端只保留最新待刷新项并再次检查会话序号。
 - **资料：** [Android IPC 安全建议](https://developer.android.com/privacy-and-security/security-tips)、[Binder 调用 UID](https://developer.android.com/reference/android/os/Binder#getCallingUid())、[PendingIntent 发送方风险与签名核验](https://developer.android.com/privacy-and-security/risks/sender-of-pending-intents)。
+- **初步结果：** 0.7.1 在一加 11 上完成 bind、connect、逐次 accept 和主线程 overlay apply；用户确认字幕出现且内容与发声一致。未授权调用拒绝与用户关闭后的不自启行为仍需单独验证。

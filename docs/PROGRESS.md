@@ -1,6 +1,6 @@
 # 开发进度
 
-更新：2026-10-12。当前：P4 已通过；P5 受保护 IPC 已通过自动验证，待一加真机验证。
+更新：2026-10-12。当前：P4 已通过；P5 实时字幕基本链路通过，完整验收暂停在本阶段。
 
 ## 已完成
 
@@ -52,6 +52,8 @@
 - 通过微信读书实际 Manifest 与 DEX 确认 `WRApplication` 的 Tinker 父链及 `TinkerApplication.getInstance()`，Hook 在真实高亮事件发生后用它取得 Context 并绑定已运行 Bridge，未编造业务类或字段。
 - 0.7.0 的 25 项 core 测试、Debug 构建和 lint 均通过；lint 仅保留既有 Gradle 版本提示。APK 为 v2 签名，AIDL、Bridge、客户端及 core 均存在于 DEX，libxposed 仍仅为外部引用。
 - 0.7.0 首轮真机中 Hook 与标准状态正常，但没有发起 IPC 绑定，悬浮字幕未出现。脱敏日志定位到首次绑定时间哨兵参与减法后溢出，错误触发重试节流；改用 nullable 首次状态修复，准备发布 0.7.1。
+- 0.7.1 已安装到一加 11。日志确认首次 bind 返回 true、连接成功，Bridge 与 Overlay 连续接受并应用状态至序号 62，覆盖播放、暂停、恢复与最终 `IDLE`；未见 IPC/Hook 错误或崩溃。
+- 用户确认 0.7.1 字幕成功出现、内容与当前发声一致，微信读书发声与内置行为正常。P5 基本真实链路通过，但完整阶段结论仍为 `PARTIAL`。
 
 ## 验证与阻塞
 
@@ -69,8 +71,8 @@
 - `./gradlew test :app:assembleDebug :app:lintDebug --offline --no-daemon` 成功；新增 `core` 未破坏 Android 模块。首次离线解析因缺少 Kotlin JVM 插件标记失败，随后从项目已配置的官方仓库解析 2.3.0，后续离线测试通过。
 - P4 真机证据只保留脱敏事件摘要；未记录正文、书名、原始 utteranceId 或章节号。人工验证证明无可见回归，不等同于毫秒级同步精度测量。
 - P5 当前 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.6.0（versionCode 6），SHA-256 为 `5bc43dbf892b76de12c8d8bc57bc2e2b4ff73d095bac669380f71b34a62531ed`。
-- P5 实时模式修复 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.7.1（versionCode 8），SHA-256 为 `f7fe55d92b4a7e94c85a60a0ac7993a95646f640de837072d8a55b09fde3a2b4`；尚未安装。
+- P5 实时模式修复 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.7.1（versionCode 8），SHA-256 为 `f7fe55d92b4a7e94c85a60a0ac7993a95646f640de837072d8a55b09fde3a2b4`；已安装并通过基本链路验证。
 
 ## 下一步
 
-完成 0.7.0 自动检查后，按 `P5_LIVE_DEVICE_TEST.md` 验证真实字幕、鉴权和生命周期。
+停留在 P5。恢复开发时按 `P5_LIVE_DEVICE_TEST.md` 完成跨应用、前后跳、切章、停止清屏、用户关闭后不自启和未授权调用拒绝测试。
