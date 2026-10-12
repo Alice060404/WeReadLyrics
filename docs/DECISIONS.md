@@ -29,3 +29,11 @@
 - 固定应用 ID/命名空间为 `io.github.alice060404.wereadlyrics`，`minSdk=24`、`targetSdk=36`、`compileSdk=36`。
 - 模块入口只处理静态作用域中的 `com.tencent.weread`，记录包名、进程名和首次加载标志；不 Hook 任何方法，不读取文本，不改变宿主返回值。
 - 模块数据禁止云备份和设备迁移。API 102 依赖为 `compileOnly`；APK DEX 检查确认未打包 `io.github.libxposed` 或 Legacy XposedBridge 实现类。
+
+# ADR-003：P3 优先探测现有 TTS 高亮广播链
+
+- **状态：** 已决定，等待动态验证
+- **日期：** 2026-10-12
+- **决定：** P3 第一轮只读探测 `TTSHighLightBroadcaster.startHighLight/pauseHighLight/stopHighLight`。不从 Android `TextToSpeech` 开始，也不先 Hook 底层 `AudioTrack`。
+- **依据：** 微信读书 10.2.2 的原始 DEX 确认高亮方法接收 `TTSBag` 与字符范围；静态调用链把它连接到在线/离线 WXTTS 播放进度。系统 `TextToSpeech` 的直接调用属于局部发音流程。
+- **边界：** 当前只证明类、签名和静态调用关系存在。AI 朗读实际调用、线程、频率、预取影响和时序准确度必须在一加 11 上验证。

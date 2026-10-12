@@ -1,6 +1,6 @@
 # 开发进度
 
-更新：2026-10-12。当前：P1 最小 LSPosed 模块，**已完成**；P2 等待 APK 读取授权。
+更新：2026-10-12。当前：P2 静态分析，**已完成**；P3 只读动态探测进行中。
 
 ## 已完成
 
@@ -19,6 +19,8 @@
 - 经用户授权，通过 ADB 将 Debug APK 安装到一加 11；系统确认包 `io.github.alice060404.wereadlyrics` 版本 0.1.0、versionCode 1，安装成功且尚未启动。
 - 用户在 LSPosed 启用模块、将作用域限定为微信读书并重新打开 App；ADB 日志确认 WeReadLyrics 已加载到 `com.tencent.weread` 主进程，`firstPackage=true`。
 - 用户人工验证微信读书 AI 朗读能够正常发声，未观察到异常；P1 构建、注入和基础无回归验收完成。
+- 经用户授权拉取微信读书 10.2.2 单一 `base.apk`，校验 ZIP 完整性与 SHA-256，并确认 APK 和反编译树均受 Git 忽略规则保护。
+- 从官方 GitHub Release 安装并校验 JADX 1.5.6；结合 `apkanalyzer` 复核 `classes5.dex` 中的 TTS 模型、播放回调和高亮广播签名，形成 `HOOK_RESEARCH.md`。
 
 ## 验证与阻塞
 
@@ -29,7 +31,8 @@
 - Debug APK：`app/build/outputs/apk/debug/app-debug.apk`，本次 SHA-256 为 `8651902da4e3a273be638f75be65fd4dee8b82cb92326418331ea701c9e97fd0`；构建产物受 `.gitignore` 保护。
 - Lint 仅保留一个版本提示：Gradle 8.14.6 已存在。当前继续使用与选定 AGP 8.13.2 官方兼容表一致的 Gradle 8.13。
 - APK 安装、LSPosed 模块识别、作用域和主进程加载日志已通过一加 11 真机验证；日志不含书籍原文。AI 朗读基础无回归由用户人工验证通过，未测试任何字幕同步行为。
+- P2 找到文本与播放状态候选点，但结论仍是静态证据；JADX 报告大量反编译错误，关键签名已用原始 DEX 工具复核。P3 尚未进行真机时序验证。
 
 ## 下一步
 
-取得用户许可后，只读查询微信读书 APK 与 split 路径，将分析所需 APK 拉取到被忽略的 `local-data/`，核验哈希并开始 P2 静态分析。
+实现仅记录长度、短哈希、字符范围和相对时间的 P3 高亮广播探针；编译和静态检查后，经用户许可安装到一加 11 进行 AI 朗读时间线验证。
