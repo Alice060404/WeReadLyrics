@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "WeReadLyrics"
 include(":app")
+include(":core")
