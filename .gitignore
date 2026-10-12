@@ -1,0 +1,84 @@
+# ==========================================
+# WeReadLyrics - .gitignore
+# ==========================================
+
+# 1. Gradle
+.gradle/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# 2. Android SDK
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# 3. Kotlin / Java
+*.class
+*.hprof
+hs_err_pid*
+replay_pid*
+.kotlin/
+
+# 4. IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+
+# 5. Android build artifacts
+*.apk
+*.apks
+*.aab
+*.ap_
+*.dex
+*.odex
+*.vdex
+*.art
+
+# 6. Signing keys and secrets
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+*.key
+
+.env
+.env.*
+!.env.example
+
+# 7. Reverse engineering artifacts
+# JADX / APK analysis
+/jadx-output/
+/reverse-output/
+/apk-dumps/
+/decompiled/
+/local-analysis/
+/local-data/
+
+# 8. Debugging and device logs
+*.log
+/device-logs/
+/logcat/
+/crash-dumps/
+
+# 9. Temporary files
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*.swo
+*~
+.cache/
+
+# 10. OS-specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
