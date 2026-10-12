@@ -61,6 +61,11 @@ replay_pid*
 /local-analysis/
 /local-data/
 
+# Local device evidence supplied for P0 verification
+/docs/lsposed截图.jpg
+/docs/root管理器中lsposed条目.jpg
+/docs/sukiSU截图.jpg
+
 # 8. Debugging and device logs
 *.log
 /device-logs/

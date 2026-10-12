@@ -9,12 +9,13 @@
 - 候选应用构建链：AGP 8.13.2、Kotlin Gradle plugin 2.3.0、JDK 17、`compileSdk` 36。AGP 8.13 的兼容表要求 Gradle 8.13 与 JDK 17、最高支持 API 36.1；8.13.2 明确支持 Kotlin 2.3。Kotlin 官方兼容表将 Kotlin 2.3.0 与 Gradle 8.13、AGP 8.13.0 列为完全支持。AGP 与 Kotlin 依赖尚未加入或解析，最终以 Android 工程构建结果确认。
 - 资料：[AGP 8.13 兼容与 Kotlin 2.3 支持](https://developer.android.com/build/releases/agp-8-13-0-release-notes)、[Kotlin Gradle plugin 兼容表](https://kotlinlang.org/docs/gradle-configure-project.html)、[Android Kotlin/D8/R8 兼容表](https://developer.android.com/build/kotlin-support)、[Gradle Wrapper 生成与校验](https://docs.gradle.org/current/userguide/gradle_wrapper.html)。
 
-## P0 LSPosed API 待定
+## P0 LSPosed API
 
-- 用户提供的管理界面版本为 `2.1.1 (7790)`；尚无设备端分支、构建来源或 API 能力证据，因此**暂不选择 Modern libxposed 或 Legacy XposedBridge，不创建模块入口**。
+- 用户提供的一加 11 截图确认：LSPosed `2.1.1 (7790)` 已激活，框架明确报告 **API 102**；管理器寄生包名为 `com.android.shell`。Root 环境为 SukiSU `4.2.0 (40900-2)`，使用 Zygisk Next。截图仅作本地证据，不提交 Git。
 - [LSPosed Modern API 官方 Wiki](https://github.com/LSPosed/LSPosed/wiki/Develop-Xposed-Modules-Using-Modern-Xposed-API)说明现代入口为 `META-INF/xposed/java_init.list`、作用域为 `META-INF/xposed/scope.list`，与传统 `assets/xposed_init` 不同；这只是 API 差异，不代表当前设备兼容。
-- 无 Root 的设备包与系统属性查询没有暴露 LSPosed 管理器或框架标识；隐藏/寄生式管理器可能不会作为普通第三方包出现。公开网络中相同版本号存在不同分发来源，仅凭 `2.1.1 (7790)` 文件名仍不能判定设备安装来源。
-- 待取得一加 11 的 LSPosed 管理器关于框架分支、来源、构建信息及 API 支持的只读证据，再选模块 API。Redmi 的能力须单独验证。
+- Maven Central 元数据确认 `io.github.libxposed:api:102.0.0` 是发布的 API 102 AAR；下载文件 SHA-256 `423484a6e1807e7a423c4b88fcd8176d104318259d91791877fed88fe91479d0` 校验通过。接口检查确认 `XposedModule` 使用无参构造，并通过 `onPackageLoaded(PackageLoadedParam)` 接收包加载事件。
+- **决策：P1 使用 Modern libxposed API 102，依赖采用 `compileOnly("io.github.libxposed:api:102.0.0")`；不混入 Legacy XposedBridge。** 模块使用 `META-INF/xposed/` 元数据，并将静态作用域限制为实测包名 `com.tencent.weread`。
+- 官方 `libxposed/api` 与 `libxposed/example` GitHub 仓库在核验时不可直接克隆；依赖真实性以 Maven Central POM、AAR 校验值、AAR 接口和 LSPosed 官方 Wiki 交叉核对。Redmi 的 API 能力仍须在 P7 单独验证。
 
 ## P0 ADB 路径
 
