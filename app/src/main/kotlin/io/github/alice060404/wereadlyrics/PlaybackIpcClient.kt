@@ -21,7 +21,7 @@ internal class PlaybackIpcClient(
     @Volatile
     private var sink: IPlaybackSink? = null
     private var binding = false
-    private var lastBindAttemptMs = Long.MIN_VALUE
+    private var lastBindAttemptMs: Long? = null
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -53,7 +53,10 @@ internal class PlaybackIpcClient(
     fun connect(context: Context) {
         val now = SystemClock.elapsedRealtime()
         synchronized(lock) {
-            if (sink != null || binding || now - lastBindAttemptMs < BIND_RETRY_MS) return
+            val retryTooSoon = lastBindAttemptMs?.let { lastAttempt ->
+                now - lastAttempt < BIND_RETRY_MS
+            } ?: false
+            if (sink != null || binding || retryTooSoon) return
             lastBindAttemptMs = now
             binding = true
         }

@@ -51,6 +51,7 @@
 - P5 0.7.0 将私有悬浮服务与导出 Binder Bridge 分离；AIDL 使用单向调用，Bridge 逐次校验 UID、固定包名和设备 APK 实测证书，Hook 不自动创建服务。正文只在内存传递且限制为 4096 字符。
 - 通过微信读书实际 Manifest 与 DEX 确认 `WRApplication` 的 Tinker 父链及 `TinkerApplication.getInstance()`，Hook 在真实高亮事件发生后用它取得 Context 并绑定已运行 Bridge，未编造业务类或字段。
 - 0.7.0 的 25 项 core 测试、Debug 构建和 lint 均通过；lint 仅保留既有 Gradle 版本提示。APK 为 v2 签名，AIDL、Bridge、客户端及 core 均存在于 DEX，libxposed 仍仅为外部引用。
+- 0.7.0 首轮真机中 Hook 与标准状态正常，但没有发起 IPC 绑定，悬浮字幕未出现。脱敏日志定位到首次绑定时间哨兵参与减法后溢出，错误触发重试节流；改用 nullable 首次状态修复，准备发布 0.7.1。
 
 ## 验证与阻塞
 
@@ -68,7 +69,7 @@
 - `./gradlew test :app:assembleDebug :app:lintDebug --offline --no-daemon` 成功；新增 `core` 未破坏 Android 模块。首次离线解析因缺少 Kotlin JVM 插件标记失败，随后从项目已配置的官方仓库解析 2.3.0，后续离线测试通过。
 - P4 真机证据只保留脱敏事件摘要；未记录正文、书名、原始 utteranceId 或章节号。人工验证证明无可见回归，不等同于毫秒级同步精度测量。
 - P5 当前 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.6.0（versionCode 6），SHA-256 为 `5bc43dbf892b76de12c8d8bc57bc2e2b4ff73d095bac669380f71b34a62531ed`。
-- P5 实时模式 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.7.0（versionCode 7），SHA-256 为 `9fc1a4a6d4a709bcc47eaca048f0b0984e24dc8c895d88e65f06ce47e598462e`；尚未安装。
+- P5 实时模式修复 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.7.1（versionCode 8），SHA-256 为 `f7fe55d92b4a7e94c85a60a0ac7993a95646f640de837072d8a55b09fde3a2b4`；尚未安装。
 
 ## 下一步
 
