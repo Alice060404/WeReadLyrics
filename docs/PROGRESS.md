@@ -32,6 +32,7 @@
 - 原始 DEX 核实 `TTSBookPlayer` 的七个低频控制方法；0.4.0 将探针移到 start/pause/resume/stop/seek/foreAhead/foreBack，并移除易误判的 callback 生命周期探针。
 - 0.4.0 已通过离线 `:app:assembleDebug` 和 `:app:lintDebug`；APK 版本、API 102 模块元数据、v2 调试签名及 `compileOnly` 打包边界检查通过。
 - 经用户授权将 0.4.0 覆盖安装到一加 11；Android 包管理器报告安装成功，并确认 versionCode 4、versionName 0.4.0。
+- 用户重新打开微信读书后，LSPosed 日志确认 0.4.0 进入主进程且十个高亮/书籍播放器控制 Hook 均安装完成。
 
 ## 验证与阻塞
 
@@ -48,4 +49,4 @@
 
 ## 下一步
 
-重新打开微信读书并确认 0.4.0 的十个 Hook；随后补测连续播放、跳句、切章、前后台和变速。
+实时验证 0.4.0 的播放、暂停、继续和停止控制事件；通过后补测连续播放、跳句、切章、前后台和变速。
