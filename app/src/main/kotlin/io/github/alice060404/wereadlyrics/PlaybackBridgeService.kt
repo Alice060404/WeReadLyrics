@@ -24,7 +24,7 @@ class PlaybackBridgeService : Service() {
             status: Int,
             text: String,
         ) {
-            enforceTrustedCaller()
+            if (!isTrustedCaller()) return
             if (text.length > PlaybackIpcProtocol.MAX_TEXT_LENGTH) {
                 throw SecurityException("Playback text exceeds IPC limit")
             }
@@ -55,9 +55,9 @@ class PlaybackBridgeService : Service() {
         return START_NOT_STICKY
     }
 
-    private fun enforceTrustedCaller() {
+    private fun isTrustedCaller(): Boolean {
         val callingUid = Binder.getCallingUid()
-        if (callingUid == Process.myUid()) return
+        if (callingUid == Process.myUid()) return true
 
         val packages = packageManager.getPackagesForUid(callingUid)?.toSet().orEmpty()
         val digests = if (TRUSTED_PACKAGE in packages) {
@@ -66,8 +66,10 @@ class PlaybackBridgeService : Service() {
             emptyMap()
         }
         if (!callerPolicy.isTrusted(packages, digests)) {
-            throw SecurityException("Untrusted playback IPC caller")
+            Log.w(LOG_TAG, "IPC rejected: uid=$callingUid")
+            return false
         }
+        return true
     }
 
     @Suppress("DEPRECATION")

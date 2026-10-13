@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "WeReadLyrics"
 include(":app")
 include(":core")
+include(":tools:ipc-probe")
