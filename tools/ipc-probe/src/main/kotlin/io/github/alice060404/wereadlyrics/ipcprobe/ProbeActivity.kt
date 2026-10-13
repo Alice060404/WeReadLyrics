@@ -12,6 +12,7 @@ import android.util.Log
 import io.github.alice060404.wereadlyrics.IPlaybackSink
 
 class ProbeActivity : Activity() {
+    private var bindingAttempted = false
     private var bound = false
 
     private val connection = object : ServiceConnection {
@@ -38,15 +39,17 @@ class ProbeActivity : Activity() {
         val intent = Intent().setComponent(
             ComponentName(MODULE_PACKAGE, BRIDGE_SERVICE_CLASS),
         )
+        bindingAttempted = true
         bound = bindService(intent, connection, Context.BIND_AUTO_CREATE)
         Log.i(LOG_TAG, "Bind requested=$bound")
         if (!bound) finish()
     }
 
     override fun onDestroy() {
-        if (bound) {
-            unbindService(connection)
+        if (bindingAttempted) {
+            runCatching { unbindService(connection) }
             bound = false
+            bindingAttempted = false
         }
         super.onDestroy()
     }
