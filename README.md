@@ -14,6 +14,7 @@
 - [P5 模拟悬浮窗验证步骤](docs/P5_DEVICE_TEST.md)
 - [P5 实时字幕与 IPC 验证步骤](docs/P5_LIVE_DEVICE_TEST.md)
 - [P5 IPC 调用方负向验证](docs/P5_IPC_SECURITY_TEST.md)
+- [P6 一加端到端与稳定性验证](docs/P6_DEVICE_TEST.md)
 
 当前入口使用设备已确认的 Modern libxposed API 102。P3 已在一加 11 上证明高亮文本与实际播放项关联；P4 已通过 22 项同步逻辑测试和日志层真机验证；P5 已通过 25 项 JVM 测试、真实字幕与 IPC 安全验证。
 
