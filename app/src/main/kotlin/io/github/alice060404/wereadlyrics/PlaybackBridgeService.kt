@@ -11,6 +11,8 @@ import io.github.alice060404.wereadlyrics.core.TrustedCallerPolicy
 import java.security.MessageDigest
 
 class PlaybackBridgeService : Service() {
+    private val sourceLock = Any()
+    private var trackedSource: TrackedSource? = null
     private val callerPolicy = TrustedCallerPolicy(
         expectedPackage = TRUSTED_PACKAGE,
         expectedCertificateSha256 = TRUSTED_CERTIFICATE_SHA256,
@@ -23,23 +25,25 @@ class PlaybackBridgeService : Service() {
             sequence: Long,
             status: Int,
             text: String,
+            sourceToken: IBinder,
         ) {
             if (!isTrustedCaller()) return
             if (text.length > PlaybackIpcProtocol.MAX_TEXT_LENGTH) {
-                throw SecurityException("Playback text exceeds IPC limit")
+                Log.w(LOG_TAG, "IPC rejected: text exceeds limit")
+                return
             }
             if (sessionId <= 0 || sequence < 0 || status !in VALID_STATUSES) {
-                throw SecurityException("Invalid playback IPC state")
+                Log.w(LOG_TAG, "IPC rejected: invalid state")
+                return
             }
-            PlaybackUpdateBus.publish(
-                PlaybackUpdate(
-                    sourceInstanceId = sourceInstanceId,
-                    sessionId = sessionId,
-                    sequence = sequence,
-                    status = status,
-                    text = text,
-                ),
+            val update = PlaybackUpdate(
+                sourceInstanceId = sourceInstanceId,
+                sessionId = sessionId,
+                sequence = sequence,
+                status = status,
+                text = text,
             )
+            if (!publishTracked(update, sourceToken)) return
             Log.i(
                 LOG_TAG,
                 "IPC accepted: session=$sessionId, seq=$sequence, status=$status, " +
@@ -53,6 +57,66 @@ class PlaybackBridgeService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         stopSelf(startId)
         return START_NOT_STICKY
+    }
+
+    override fun onDestroy() {
+        synchronized(sourceLock) {
+            trackedSource?.unlink()
+            trackedSource = null
+        }
+        super.onDestroy()
+    }
+
+    private fun publishTracked(update: PlaybackUpdate, sourceToken: IBinder): Boolean =
+        synchronized(sourceLock) {
+            val current = trackedSource
+            if (current?.token !== sourceToken || current.sourceInstanceId != update.sourceInstanceId) {
+                current?.unlink()
+                val deathRecipient = IBinder.DeathRecipient {
+                    onSourceDied(update.sourceInstanceId, sourceToken)
+                }
+                try {
+                    sourceToken.linkToDeath(deathRecipient, 0)
+                } catch (_: Throwable) {
+                    Log.w(LOG_TAG, "IPC source already unavailable")
+                    return@synchronized false
+                }
+                trackedSource = TrackedSource(
+                    sourceInstanceId = update.sourceInstanceId,
+                    sessionId = update.sessionId,
+                    sequence = update.sequence,
+                    token = sourceToken,
+                    deathRecipient = deathRecipient,
+                )
+            } else {
+                trackedSource = current.copy(
+                    sessionId = update.sessionId,
+                    sequence = update.sequence,
+                )
+            }
+            PlaybackUpdateBus.publish(update)
+            true
+        }
+
+    private fun onSourceDied(sourceInstanceId: Long, sourceToken: IBinder) {
+        val idleUpdate = synchronized(sourceLock) {
+            val current = trackedSource
+            if (current?.sourceInstanceId != sourceInstanceId || current.token !== sourceToken) return
+            trackedSource = null
+            PlaybackUpdate(
+                sourceInstanceId = current.sourceInstanceId,
+                sessionId = current.sessionId,
+                sequence = current.sequence + 1,
+                status = PlaybackIpcProtocol.STATUS_IDLE,
+                text = "",
+            )
+        }
+        PlaybackUpdateBus.publish(idleUpdate)
+        Log.i(
+            LOG_TAG,
+            "IPC source disconnected: session=${idleUpdate.sessionId}, " +
+                "seq=${idleUpdate.sequence}",
+        )
     }
 
     private fun isTrustedCaller(): Boolean {
@@ -107,5 +171,17 @@ class PlaybackBridgeService : Service() {
             PlaybackIpcProtocol.STATUS_PLAYING,
             PlaybackIpcProtocol.STATUS_PAUSED,
         )
+    }
+
+    private data class TrackedSource(
+        val sourceInstanceId: Long,
+        val sessionId: Long,
+        val sequence: Long,
+        val token: IBinder,
+        val deathRecipient: IBinder.DeathRecipient,
+    ) {
+        fun unlink() {
+            runCatching { token.unlinkToDeath(deathRecipient, 0) }
+        }
     }
 }

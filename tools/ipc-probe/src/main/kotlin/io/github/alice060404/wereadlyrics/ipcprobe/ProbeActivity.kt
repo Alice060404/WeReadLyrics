@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Binder
 import android.os.Bundle
 import android.os.IBinder
 import android.os.Process
@@ -12,6 +13,7 @@ import android.util.Log
 import io.github.alice060404.wereadlyrics.IPlaybackSink
 
 class ProbeActivity : Activity() {
+    private val sourceToken = Binder()
     private var bindingAttempted = false
     private var bound = false
 
@@ -24,6 +26,7 @@ class ProbeActivity : Activity() {
                 0L,
                 STATUS_IDLE,
                 "",
+                sourceToken,
             )
             Log.i(LOG_TAG, "Probe transaction sent")
             window.decorView.postDelayed(::finish, FINISH_DELAY_MS)

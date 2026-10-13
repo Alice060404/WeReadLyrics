@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Binder
 import android.os.IBinder
 import android.os.SystemClock
 import io.github.alice060404.wereadlyrics.core.PlaybackState
@@ -15,6 +16,7 @@ internal class PlaybackIpcClient(
     private val logger: (String) -> Unit,
 ) {
     private val sourceInstanceId = SecureRandom().nextLong()
+    private val sourceToken = Binder()
     private val latestState = AtomicReference<PlaybackState>()
     private val lock = Any()
 
@@ -96,6 +98,7 @@ internal class PlaybackIpcClient(
                 state.lastSequence,
                 status,
                 text,
+                sourceToken,
             )
         } catch (error: Throwable) {
             synchronized(lock) {
