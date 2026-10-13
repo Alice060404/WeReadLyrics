@@ -28,4 +28,6 @@
 
 2026-10-13 完整交互复测中，用户确认跨桌面/其他应用显示、暂停保留、恢复更新、前后跳、切章、停止后清屏、通知保留和手动关闭后不自启均正常。脱敏日志记录到 `PAUSED`、`Resumed`、章节/会话重建、15 秒后 `IDLE`，以及用户关闭时 `IPC disconnected`；关闭后 Hook 事件继续但不再出现 `Overlay applied`。未发现 `FATAL EXCEPTION`、Hook 或 IPC 错误。
 
-shell 显式启动私有 `OverlayService` 被系统以 `Requires permission not exported` 拒绝；随后模块无进程，残留记录为 `app=null`、`startForegroundCount=0`，证明服务未实例化。当前结论仍为 `PARTIAL`：真实字幕及生命周期项目通过，只剩非微信读书 UID 调用 Bridge 的真机拒绝测试。
+shell 显式启动私有 `OverlayService` 被系统以 `Requires permission not exported` 拒绝；随后模块无进程，残留记录为 `app=null`、`startForegroundCount=0`，证明服务未实例化。独立 UID 探针随后证明 Bridge 会丢弃非微信读书调用，详见 `P5_IPC_SECURITY_TEST.md`。
+
+**P5 结论：`PASS`。** 模拟与真实字幕、悬浮权限、跨应用显示、IPC 鉴权及生命周期均在一加 11 上通过。0.7.2 正向回归再次确认微信读书调用被接受并更新字幕，未观察到宿主回归或崩溃。

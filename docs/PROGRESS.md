@@ -1,6 +1,6 @@
 # 开发进度
 
-更新：2026-10-13。当前：P4 已通过；P5 字幕与生命周期已通过，正在完成 IPC 调用方负向实测。
+更新：2026-10-13。当前：P5 已通过；进入 P6 一加端到端 MVP 与稳定性验证。
 
 ## 已完成
 
@@ -57,6 +57,8 @@
 - 用户完成 0.7.1 完整交互复测：跨应用、暂停/恢复、前后跳、切章、停止后清屏、通知保留，以及关闭实时字幕后再次朗读不自启均正常。
 - 脱敏日志与人工结果一致：出现 `PAUSED`、`Resumed`、章节/会话重建和 15 秒后的 `IDLE`；用户关闭后 IPC 断开，后续朗读事件没有触发 `Overlay applied`，且未见崩溃。
 - shell 尝试显式启动私有 `OverlayService` 被 `Requires permission not exported` 拒绝；模块进程未启动，系统记录显示 `app=null`、`startForegroundCount=0`。
+- 新增独立、无权限的 IPC 调用方探针。真机确认探针 UID 与微信读书、模块均不同；Bridge 明确记录拒绝，未进入更新总线，探针解绑后服务退出且已从设备卸载。
+- 0.7.2 正向回归中模块重新注入微信读书主进程，连续完成 `IPC accepted` 与 `Overlay applied`；用户确认字幕、发声和内置高亮正常。P5 最终结论为 `PASS`。
 
 ## 验证与阻塞
 
@@ -73,10 +75,10 @@
 - P3 探针已在真机成功加载且未观察到宿主回归；当前文本与实际播放项关联通过硬门槛。控制方法名与产品状态并非一一对应，该限制转入 P4 状态机处理。
 - `./gradlew test :app:assembleDebug :app:lintDebug --offline --no-daemon` 成功；新增 `core` 未破坏 Android 模块。首次离线解析因缺少 Kotlin JVM 插件标记失败，随后从项目已配置的官方仓库解析 2.3.0，后续离线测试通过。
 - P4 真机证据只保留脱敏事件摘要；未记录正文、书名、原始 utteranceId 或章节号。人工验证证明无可见回归，不等同于毫秒级同步精度测量。
-- P5 当前 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.6.0（versionCode 6），SHA-256 为 `5bc43dbf892b76de12c8d8bc57bc2e2b4ff73d095bac669380f71b34a62531ed`。
+- P5 模拟模式 APK 为 0.6.0（versionCode 6），当时 SHA-256 为 `5bc43dbf892b76de12c8d8bc57bc2e2b4ff73d095bac669380f71b34a62531ed`。
 - P5 实时模式修复 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.7.1（versionCode 8），SHA-256 为 `f7fe55d92b4a7e94c85a60a0ac7993a95646f640de837072d8a55b09fde3a2b4`；已安装并通过基本链路验证。
-- P5 实时字幕和生命周期在一加 11 上已通过；Bridge 的包名/证书策略有 3 项 JVM 测试，真实非微信读书 UID Binder 调用仍未执行，因此阶段暂不标记完成。
+- P5 当前 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.7.2（versionCode 9），SHA-256 为 `2c966889814e0747cf58dfde0c07fd181f0d9a569f35fa140d070ea39c3b2283`；已安装到一加 11 并通过正向与负向 IPC 回归。
 
 ## 下一步
 
-停留在 P5。建立最小独立调用方探针，在一加 11 上确认非微信读书 UID 的 Bridge 调用被拒绝；通过后完成 P5 结论，再进入 P6。
+进入 P6。建立可复现的一加端到端测试计划，覆盖锁屏、网络中断恢复、倍速、连续运行和宿主强制退出恢复，并检查重复 Hook、残留、重绘和异常日志。
