@@ -24,6 +24,8 @@
 
 ## 当前结果
 
-0.7.0 首次实测因重试时间哨兵减法溢出，没有发起绑定；0.7.1 修复后，日志确认 `IPC bind requested=true`、`IPC connected`，服务连续接受并应用标准状态至序号 62。期间出现 `PLAYING`、`PAUSED`、恢复播放和最终 `IDLE`，无 IPC/Hook 错误或崩溃。用户确认字幕成功出现、内容与当前发声一致，微信读书正常。
+0.7.0 首次实测因重试时间哨兵减法溢出，没有发起绑定；0.7.1 修复后，日志确认 `IPC bind requested=true`、`IPC connected`，Bridge 持续接受状态并在主线程更新悬浮窗。用户确认字幕内容与当前发声一致，微信读书发声和内置高亮正常。
 
-当前结论为 `PARTIAL`：基本真实字幕链路通过；步骤 3 的跨应用观察、步骤 5 的前后跳/切章、步骤 7 的关闭后不自启，以及未授权 Binder 调用拒绝仍未完成明确验收。
+2026-10-13 完整交互复测中，用户确认跨桌面/其他应用显示、暂停保留、恢复更新、前后跳、切章、停止后清屏、通知保留和手动关闭后不自启均正常。脱敏日志记录到 `PAUSED`、`Resumed`、章节/会话重建、15 秒后 `IDLE`，以及用户关闭时 `IPC disconnected`；关闭后 Hook 事件继续但不再出现 `Overlay applied`。未发现 `FATAL EXCEPTION`、Hook 或 IPC 错误。
+
+shell 显式启动私有 `OverlayService` 被系统以 `Requires permission not exported` 拒绝；随后模块无进程，残留记录为 `app=null`、`startForegroundCount=0`，证明服务未实例化。当前结论仍为 `PARTIAL`：真实字幕及生命周期项目通过，只剩非微信读书 UID 调用 Bridge 的真机拒绝测试。
