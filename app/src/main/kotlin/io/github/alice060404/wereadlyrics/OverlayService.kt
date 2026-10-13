@@ -169,7 +169,7 @@ class OverlayService : Service() {
         } ?: return
         if (mode != Mode.LIVE || !acceptOrdering(update)) return
 
-        when (update.status) {
+        val visualChanged = when (update.status) {
             PlaybackIpcProtocol.STATUS_PLAYING -> {
                 if (update.text.isEmpty()) hideOverlayView() else showOverlayText(update.text, 1f)
             }
@@ -181,7 +181,10 @@ class OverlayService : Service() {
             PlaybackIpcProtocol.STATUS_IDLE,
             PlaybackIpcProtocol.STATUS_BUFFERING,
             -> hideOverlayView()
+
+            else -> false
         }
+        if (!visualChanged) return
         Log.i(
             LOG_TAG,
             "Overlay applied: session=${update.sessionId}, seq=${update.sequence}, " +
@@ -207,11 +210,18 @@ class OverlayService : Service() {
         lastSequence = Long.MIN_VALUE
     }
 
-    private fun showOverlayText(text: String, alpha: Float = 1f) {
+    private fun showOverlayText(text: String, alpha: Float = 1f): Boolean {
         overlayView?.let { view ->
-            view.text = text
-            view.alpha = alpha
-            return
+            var changed = false
+            if (view.text.toString() != text) {
+                view.text = text
+                changed = true
+            }
+            if (view.alpha != alpha) {
+                view.alpha = alpha
+                changed = true
+            }
+            return changed
         }
 
         val view = TextView(this).apply {
@@ -249,11 +259,14 @@ class OverlayService : Service() {
 
         windowManager.addView(view, parameters)
         overlayView = view
+        return true
     }
 
-    private fun hideOverlayView() {
-        overlayView?.let { view -> runCatching { windowManager.removeView(view) } }
+    private fun hideOverlayView(): Boolean {
+        val view = overlayView ?: return false
+        runCatching { windowManager.removeView(view) }
         overlayView = null
+        return true
     }
 
     private fun installDragHandler(view: View, parameters: WindowManager.LayoutParams) {
