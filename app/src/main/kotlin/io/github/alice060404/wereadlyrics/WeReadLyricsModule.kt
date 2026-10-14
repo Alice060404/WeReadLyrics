@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.SystemClock
 import android.util.Log
 import io.github.alice060404.wereadlyrics.core.ControlAction
+import io.github.alice060404.wereadlyrics.core.HostCompatibility
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
@@ -25,12 +26,12 @@ class WeReadLyricsModule : XposedModule() {
     )
 
     override fun onPackageLoaded(param: PackageLoadedParam) {
-        if (param.packageName != TARGET_PACKAGE) return
+        if (param.packageName != HostCompatibility.SUPPORTED_PACKAGE) return
 
         val processName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             Application.getProcessName()
         } else {
-            TARGET_PACKAGE
+            HostCompatibility.SUPPORTED_PACKAGE
         }
 
         log(
@@ -40,12 +41,72 @@ class WeReadLyricsModule : XposedModule() {
                 "firstPackage=${param.isFirstPackage}",
         )
 
-        if (processName == TARGET_PACKAGE && param.isFirstPackage && probesInstalled.compareAndSet(false, true)) {
+        if (processName == HostCompatibility.SUPPORTED_PACKAGE &&
+            param.isFirstPackage &&
+            bootstrapInstalled.compareAndSet(false, true)
+        ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                installProbes(param.defaultClassLoader)
+                installBootstrap(param.defaultClassLoader, param.applicationInfo.className)
             } else {
                 log(Log.WARN, LOG_TAG, "Probe unavailable below Android 10")
             }
+        }
+    }
+
+    @SuppressLint("NewApi")
+    private fun installBootstrap(classLoader: ClassLoader, applicationClassName: String?) {
+        try {
+            require(!applicationClassName.isNullOrEmpty()) { "Missing application class" }
+            val applicationClass = Class.forName(applicationClassName, false, classLoader)
+            val onCreate = applicationClass.getMethod("onCreate")
+            hook(onCreate)
+                .setId("$MODULE_ID:application_on_create")
+                .intercept(
+                    XposedInterface.Hooker { chain ->
+                        val result = chain.proceed()
+                        if (initializationAttempted.compareAndSet(false, true)) {
+                            val context = chain.thisObject as? Context
+                            if (context == null) {
+                                log(Log.ERROR, LOG_TAG, "Host version check failed: missing context")
+                            } else {
+                                installForSupportedHost(context, classLoader)
+                            }
+                        }
+                        result
+                    },
+                )
+            log(Log.INFO, LOG_TAG, "Host compatibility bootstrap installed: application=$applicationClassName")
+        } catch (error: Throwable) {
+            log(Log.ERROR, LOG_TAG, "Host compatibility bootstrap failed: ${error.javaClass.name}")
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun installForSupportedHost(context: Context, classLoader: ClassLoader) {
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode
+            } else {
+                packageInfo.versionCode.toLong()
+            }
+            if (!HostCompatibility.isSupported(context.packageName, versionCode)) {
+                log(
+                    Log.WARN,
+                    LOG_TAG,
+                    "Unsupported host version: package=${context.packageName}, " +
+                        "versionCode=$versionCode; probes disabled",
+                )
+                return
+            }
+            log(
+                Log.INFO,
+                LOG_TAG,
+                "Host version accepted: versionName=${packageInfo.versionName}, versionCode=$versionCode",
+            )
+            installProbes(classLoader)
+        } catch (error: Throwable) {
+            log(Log.ERROR, LOG_TAG, "Host version check failed: ${error.javaClass.name}")
         }
     }
 
@@ -237,7 +298,6 @@ class WeReadLyricsModule : XposedModule() {
     }
 
     private companion object {
-        const val TARGET_PACKAGE = "com.tencent.weread"
         const val LOG_TAG = "WeReadLyrics"
         const val MODULE_ID = "io.github.alice060404.wereadlyrics"
         const val TTS_BAG_CLASS = "com.tencent.weread.tts.model.TTSBag"
@@ -247,7 +307,8 @@ class WeReadLyricsModule : XposedModule() {
         const val TINKER_APPLICATION_CLASS = "com.tencent.tinker.loader.app.TinkerApplication"
         const val TOKEN_BYTES = 6
 
-        val probesInstalled = AtomicBoolean(false)
+        val bootstrapInstalled = AtomicBoolean(false)
+        val initializationAttempted = AtomicBoolean(false)
         val eventSequence = AtomicLong(0)
         val probeStartElapsedMs = SystemClock.elapsedRealtime()
         val sessionSalt = ByteArray(16).also(SecureRandom()::nextBytes)
