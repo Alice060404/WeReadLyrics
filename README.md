@@ -1,6 +1,6 @@
 # WeReadLyrics
 
-Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的悬浮窗显示当前实际读到的句子。P6 一加 11 端到端 MVP 与稳定性验证已通过；项目目前处于 P7 Redmi 目标机适配。
+Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的悬浮窗显示当前实际读到的句子。一加 11 端到端验证已通过；Redmi K80 至尊版在当前临时 Root 会话中可用。项目准备进入 P8 交付维护。
 
 - [完整开发规划](development-guide.md)
 - [阶段与验收](docs/PLAN.md)
