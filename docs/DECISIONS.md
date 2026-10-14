@@ -67,3 +67,11 @@
 - **数据边界：** AIDL 只传当前标准状态和最多 4096 字符的当前项；不传整章，不写磁盘，不发广播。单向调用避免阻塞微信读书线程，服务端只保留最新待刷新项并再次检查会话序号。
 - **资料：** [Android IPC 安全建议](https://developer.android.com/privacy-and-security/security-tips)、[Binder 调用 UID](https://developer.android.com/reference/android/os/Binder#getCallingUid())、[PendingIntent 发送方风险与签名核验](https://developer.android.com/privacy-and-security/risks/sender-of-pending-intents)。
 - **验证结果：** 0.7.1 在一加 11 上完成真实字幕和完整生命周期验证；shell 无法启动未导出的 Overlay Service。0.7.2 的独立探针以不同 UID 成功绑定 Bridge，但调用被明确拒绝且没有进入更新总线；随后微信读书正向回归仍被接受并正常更新字幕。
+
+# ADR-007：未知微信读书版本默认禁用业务 Hook
+
+- **状态：** 已验证
+- **日期：** 2026-10-14
+- **决定：** 仅允许 `com.tencent.weread` versionCode 10167650（10.2.2）安装内部 TTS Hook。未知版本、版本查询失败或应用入口变化时只记录脱敏原因，不尝试业务 Hook。
+- **实现：** Modern API 的 `PackageLoadedParam` 提供 `ApplicationInfo` 但没有版本码。模块先 Hook 已由 APK Manifest 验证的 `WRApplication.onCreate()`；原方法完成后从实例取得 Context，通过 PackageManager 读取 versionCode，再决定是否安装业务 Hook。该入口是公开 `Application.onCreate()` 覆盖，不依赖隐藏 `Application.attach()`。
+- **验证结果：** 三项纯 Kotlin 测试覆盖正确版本、未知版本和错误包名。0.9.0 在 Redmi 上按顺序记录引导安装、10.2.2 版本接受和十个业务 Hook 安装；真实字幕、暂停/恢复和停止清屏回归通过。
