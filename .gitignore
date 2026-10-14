@@ -66,6 +66,11 @@ replay_pid*
 /docs/root管理器中lsposed条目.jpg
 /docs/sukiSU截图.jpg
 
+# Local development plans and verification records
+/AGENTS.md
+/development-guide.md
+/docs/
+
 # 8. Debugging and device logs
 *.log
 /device-logs/
