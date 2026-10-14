@@ -74,6 +74,7 @@
 - 用户已明确允许 P7 目标机测试。ADB 识别 Redmi K80 至尊版为 `25060RK16C` / `dali`，系统为 Android 16、API 36、HyperOS `OS3.0.303.0.WONCNXM`，ABI 为 arm64。
 - 只读检查确认当前 ADB shell 与 `su` 均为 `ksu` Root 上下文；LSPosed 模块为 2.1.1（7790），`lspd` 与 Zygisk companion 正在运行。WeReadLyrics 尚未安装。
 - Redmi 微信读书为 10.2.2（versionCode 10167650）。与一加 APK 的签名、7,152 个 ZIP 条目、Manifest 和全部 DEX 一致；整包仅签名块附近存在单字节差异，业务 Hook 目标代码相同。
+- P7 构建检查再次通过，0.8.0 APK SHA-256 保持 `8b42d89430e30f629729d9458ab0ef0115ab08efde2ce94ec9971dbe27566f1b`。经用户许可安装到 Redmi 后，包管理器确认 versionCode 10；模块未自动启动，悬浮权限初始为 `ignore`。
 
 ## 验证与阻塞
 
@@ -97,4 +98,4 @@
 
 ## 下一步
 
-运行构建检查后，经用户许可在 Redmi 安装同一 0.8.0 APK；随后由用户启用微信读书作用域并完成不重启条件下的真机验证。
+由用户在 Redmi 授予 WeReadLyrics 悬浮权限，并在 LSPosed 中启用模块、仅选择微信读书作用域；无需且不得重启设备。随后重新打开微信读书验证注入。

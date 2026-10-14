@@ -25,3 +25,9 @@
 ## 判定
 
 最终结论只能为：完整可用、当前 Root 会话可用、需要用户手动恢复环境或不兼容。必须明确重启后的临时 Root 限制以及未覆盖事项。
+
+## 当前结果
+
+`./scripts/check-debug-build.sh` 已通过离线测试、构建、lint 和 APK 元数据检查；APK 为 0.8.0（versionCode 10），SHA-256 为 `8b42d89430e30f629729d9458ab0ef0115ab08efde2ce94ec9971dbe27566f1b`。
+
+经用户许可，APK 已安装到 Redmi，包管理器确认版本正确且安装成功。安装后模块进程没有自动启动，`SYSTEM_ALERT_WINDOW` 初始状态为 `ignore`。尚未授予悬浮权限、启用 LSPosed 作用域或验证注入，因此不能据安装成功宣称模块可用。
