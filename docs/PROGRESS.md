@@ -1,6 +1,6 @@
 # 开发进度
 
-更新：2026-10-14。当前：P8 交付文档与干净构建已完成，等待一加 11 对最终 0.9.0 产物快速回归。
+更新：2026-10-14。当前：P0 至 P8 全部完成；最终 0.9.0 产物已通过自动检查及两台设备回归。
 
 ## 已完成
 
@@ -86,6 +86,8 @@
 - 使用独立 Gradle 用户目录重新解析依赖，并在依赖齐备后离线执行 `clean :core:test :app:assembleDebug :app:lintDebug`；55 个任务完成，28 项测试全部通过，lint 报告无问题。
 - 最终 0.9.0 Debug APK SHA-256 为 `8beb454f2aa7ac857b18dc73246e8b0663208b4676c5d4a2ec24f1630c8df00d`。它与首次 0.9.0 APK 的 20 个 ZIP 条目、Manifest、DEX、资源和调试证书均一致，差异仅位于重新生成的 APK 签名块。
 - 经用户许可将最终 APK 重新安装到 Redmi；从设备回读的安装包 SHA-256 与构建产物完全一致。用户确认字幕、发声、内置高亮、暂停/恢复和停止清理均正常；日志记录状态序号 1 至 36，并在停止 15 秒后进入空状态。
+- 最终 0.9.0 APK 已覆盖安装到一加 11，包管理器确认 versionCode 11。从设备回读的 APK 与构建产物 SHA-256 完全一致；日志保存了序号 1 至 46 的连续 IPC 与悬浮窗更新，用户确认字幕内容、朗读、高亮、暂停/恢复和停止清屏均正常。
+- 最终再次运行 `./scripts/check-debug-build.sh`：离线测试、Debug 构建、lint、模块入口、作用域、版本和 APK 哈希检查全部通过。P8 结论为 `PASS`。
 
 ## 验证与阻塞
 
@@ -106,8 +108,8 @@
 - P5 实时模式修复 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.7.1（versionCode 8），SHA-256 为 `f7fe55d92b4a7e94c85a60a0ac7993a95646f640de837072d8a55b09fde3a2b4`；已安装并通过基本链路验证。
 - P5 当前 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.7.2（versionCode 9），SHA-256 为 `2c966889814e0747cf58dfde0c07fd181f0d9a569f35fa140d070ea39c3b2283`；已安装到一加 11 并通过正向与负向 IPC 回归。
 - P6 当前 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.8.0（versionCode 10），SHA-256 为 `8b42d89430e30f629729d9458ab0ef0115ab08efde2ce94ec9971dbe27566f1b`；已安装到一加 11 并通过完整端到端与稳定性验证。
-- P8 当前 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.9.0（versionCode 11），SHA-256 为 `8beb454f2aa7ac857b18dc73246e8b0663208b4676c5d4a2ec24f1630c8df00d`；已在 Redmi 上验证最终文件，等待一加 11 快速回归。
+- P8 最终 APK：`app/build/outputs/apk/debug/app-debug.apk`，版本 0.9.0（versionCode 11），SHA-256 为 `8beb454f2aa7ac857b18dc73246e8b0663208b4676c5d4a2ec24f1630c8df00d`；已在 Redmi 和一加 11 上验证同一文件。
 
 ## 下一步
 
-继续 P8：在一加 11 安装同一 SHA-256 的最终 0.9.0 APK，快速验证注入、字幕、暂停/恢复和停止清屏；通过后完成最终提交。
+P0 至 P8 已完成。后续仅在微信读书版本、系统、LSPosed API 或模块功能发生变化时重新进入对应验证阶段；不自动创建标签、发布 APK 或推送远程。
