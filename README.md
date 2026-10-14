@@ -1,6 +1,8 @@
 # WeReadLyrics
 
-Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的悬浮窗显示当前实际读到的句子。一加 11 端到端验证已通过；Redmi K80 至尊版在当前临时 Root 会话中可用。项目准备进入 P8 交付维护。
+Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的悬浮窗显示当前实际读到的句子。一加 11 端到端验证已通过；Redmi K80 至尊版在当前临时 Root 会话中可用。
+
+当前 0.9.0 仅启用微信读书 10.2.2（versionCode 10167650）的内部 Hook。未知版本会安全停用业务 Hook，等待重新分析和验证。
 
 - [完整开发规划](development-guide.md)
 - [阶段与验收](docs/PLAN.md)
@@ -16,8 +18,11 @@ Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的
 - [P5 IPC 调用方负向验证](docs/P5_IPC_SECURITY_TEST.md)
 - [P6 一加端到端与稳定性验证](docs/P6_DEVICE_TEST.md)
 - [P7 Redmi 适配验证](docs/P7_DEVICE_TEST.md)
+- [构建与安装](docs/SETUP.md)
+- [兼容性与交付状态](docs/COMPATIBILITY.md)
+- [故障排查与安全回滚](docs/TROUBLESHOOTING.md)
 
-当前入口使用设备已确认的 Modern libxposed API 102。P3 已在一加 11 上证明高亮文本与实际播放项关联；P4 已通过 22 项同步逻辑测试和日志层真机验证；P5 已通过 25 项 JVM 测试、真实字幕与 IPC 安全验证；P6 已通过完整功能场景和 42 分钟连续运行验证。
+当前入口使用设备已确认的 Modern libxposed API 102。同步核心通过 28 项 JVM 测试；悬浮窗、逐次鉴权 IPC、宿主退出清屏及版本门禁均有真机证据。正文只在进程内传递，不写入磁盘或诊断日志。
 
 ## 本地构建
 
@@ -31,3 +36,5 @@ Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的
 ```
 
 前三条命令可单独执行；脚本离线运行测试、构建和 lint，并检查 Debug APK 的模块入口、作用域、版本与 SHA-256。Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。若网络必须经过代理，请在本机 Gradle 用户配置或 JVM 参数中设置代理，不要向仓库提交含凭据的代理配置。
+
+安装、LSPosed 作用域、悬浮权限、停用和卸载步骤见 [构建与安装](docs/SETUP.md)。不要提交 APK、签名密钥、反编译树、书籍正文或设备日志。
