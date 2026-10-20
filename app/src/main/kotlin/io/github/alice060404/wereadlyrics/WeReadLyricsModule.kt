@@ -146,6 +146,10 @@ class WeReadLyricsModule : XposedModule() {
                 "stop",
                 accessors,
             )
+            installProgressProbe(
+                bookPlayerClass.getDeclaredMethod("highLightTTSBag", bagClass, Integer.TYPE),
+                accessors,
+            )
             installControlProbe(bookPlayerClass.getDeclaredMethod("start"), "start")
             installControlProbe(bookPlayerClass.getDeclaredMethod("pause"), "pause")
             installControlProbe(bookPlayerClass.getDeclaredMethod("resume"), "resume")
@@ -158,7 +162,7 @@ class WeReadLyricsModule : XposedModule() {
                 Log.INFO,
                 LOG_TAG,
                 "Probe install complete: highlight start/pause/stop; " +
-                    "book control start/pause/resume/stop/seek/fore_ahead/fore_back",
+                    "book character progress; book control start/pause/resume/stop/seek/fore_ahead/fore_back",
             )
         } catch (error: Throwable) {
             log(
@@ -181,6 +185,31 @@ class WeReadLyricsModule : XposedModule() {
                         logObservationFailure("highlight_$event", error)
                     }
                     chain.proceed()
+                },
+            )
+    }
+
+    @SuppressLint("NewApi")
+    private fun installProgressProbe(method: Method, accessors: HighlightAccessors) {
+        hook(method)
+            .setId("$MODULE_ID:character_progress")
+            .intercept(
+                XposedInterface.Hooker { chain ->
+                    // The host validates playback before calling this method. Let its
+                    // highlight event select the sentence before forwarding its local offset.
+                    val result = chain.proceed()
+                    try {
+                        val bag = chain.args.firstOrNull()
+                        val text = bag?.let { accessors.textGetter.invoke(it) as? String }.orEmpty()
+                        val utteranceId = bag?.let { accessors.utteranceGetter.invoke(it) as? String }.orEmpty()
+                        val offset = chain.args.getOrNull(1) as? Int
+                        if (offset != null && offset in text.indices) {
+                            syncObserver.onProgress((utteranceId.ifEmpty { text }).sessionToken(), offset)
+                        }
+                    } catch (error: Throwable) {
+                        logObservationFailure("character_progress", error)
+                    }
+                    result
                 },
             )
     }

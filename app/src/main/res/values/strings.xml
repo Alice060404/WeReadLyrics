@@ -15,7 +15,7 @@
     <string name="start_live_overlay">启动实时字幕</string>
     <string name="hide_overlay">停止悬浮字幕</string>
     <string name="screen_hint">实时模式必须由你在此处启动。字幕可跨应用显示和拖动；停止朗读后自动隐藏。</string>
-    <string name="mock_line_first">本地模拟字幕：第一句会每三秒更新。</string>
+    <string name="mock_line_first">本地模拟字幕：文字会跟随模拟朗读进度滚动。</string>
     <string name="mock_line_drag">可以把字幕拖到屏幕上的合适位置。</string>
-    <string name="mock_line_long">这是一段用于验证两行限制和长文本末尾省略策略的本地模拟文字，它不会读取或传输任何微信读书正文内容。</string>
+    <string name="mock_line_long">这是一段用于验证长句滚动的本地模拟文字。字幕只显示两行，但不会省略后面的内容。随着朗读位置向前推进，后面的文字会平滑滚入视野，直到这句话完整显示结束。</string>
 </resources>

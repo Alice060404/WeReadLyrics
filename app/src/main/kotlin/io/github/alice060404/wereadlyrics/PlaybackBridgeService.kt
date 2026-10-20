@@ -27,12 +27,26 @@ class PlaybackBridgeService : Service() {
             text: String,
             sourceToken: IBinder,
         ) {
+            publishPositionedState(sourceInstanceId, sessionId, sequence, status, text, sourceToken, 0)
+        }
+
+        override fun publishPositionedState(
+            sourceInstanceId: Long,
+            sessionId: Long,
+            sequence: Long,
+            status: Int,
+            text: String,
+            sourceToken: IBinder,
+            characterOffset: Int,
+        ) {
             if (!isTrustedCaller()) return
             if (text.length > PlaybackIpcProtocol.MAX_TEXT_LENGTH) {
                 Log.w(LOG_TAG, "IPC rejected: text exceeds limit")
                 return
             }
-            if (sessionId <= 0 || sequence < 0 || status !in VALID_STATUSES) {
+            if (sessionId <= 0 || sequence < 0 || status !in VALID_STATUSES ||
+                characterOffset < 0 || characterOffset > (text.length - 1).coerceAtLeast(0)
+            ) {
                 Log.w(LOG_TAG, "IPC rejected: invalid state")
                 return
             }
@@ -42,6 +56,7 @@ class PlaybackBridgeService : Service() {
                 sequence = sequence,
                 status = status,
                 text = text,
+                characterOffset = characterOffset,
             )
             if (!publishTracked(update, sourceToken)) return
             Log.i(

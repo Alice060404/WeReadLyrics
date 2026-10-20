@@ -12,6 +12,7 @@ data class DisplayItem(
     val text: String,
     val sourceStart: Int,
     val sourceEndInclusive: Int,
+    val characterOffset: Int = 0,
 )
 
 data class PlaybackState(

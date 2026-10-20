@@ -17,6 +17,12 @@ data class HighlightCleared(
     override val observedAtMs: Long,
 ) : ObservedPlaybackEvent
 
+data class CharacterProgressObserved(
+    override val observedAtMs: Long,
+    val itemId: String,
+    val characterOffset: Int,
+) : ObservedPlaybackEvent
+
 enum class ControlAction {
     START,
     PAUSE,

@@ -32,6 +32,16 @@ class ObservedPlaybackAdapter(
         when (observed) {
             is HighlightObserved -> acceptHighlight(observed, output)
             is HighlightCleared -> Unit
+            is CharacterProgressObserved -> {
+                val activeSession = sessionId
+                if (activeSession != null && !isPaused &&
+                    currentItemId == observed.itemId && observed.characterOffset >= 0
+                ) {
+                    emit(output) { eventSequence ->
+                        PositionAdvanced(activeSession, eventSequence, observed.itemId, observed.characterOffset)
+                    }
+                }
+            }
             is ControlObserved -> acceptControl(observed, output)
         }
         return output

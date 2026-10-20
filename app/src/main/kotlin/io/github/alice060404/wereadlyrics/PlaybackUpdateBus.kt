@@ -6,6 +6,7 @@ internal data class PlaybackUpdate(
     val sequence: Long,
     val status: Int,
     val text: String,
+    val characterOffset: Int = 0,
 )
 
 internal object PlaybackUpdateBus {

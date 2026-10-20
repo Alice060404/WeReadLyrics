@@ -39,6 +39,13 @@ data class Paused(
     override val sequence: Long,
 ) : PlaybackEvent
 
+data class PositionAdvanced(
+    override val sessionId: Long,
+    override val sequence: Long,
+    val itemId: String,
+    val characterOffset: Int,
+) : PlaybackEvent
+
 data class Resumed(
     override val sessionId: Long,
     override val sequence: Long,

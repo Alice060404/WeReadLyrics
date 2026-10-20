@@ -9,28 +9,27 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.ServiceInfo
-import android.graphics.Color
 import android.graphics.PixelFormat
-import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.provider.Settings
-import android.text.TextUtils
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.TextView
+import android.view.animation.DecelerateInterpolator
 
 class OverlayService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private val updateLock = Any()
     private lateinit var windowManager: WindowManager
-    private var overlayView: TextView? = null
+    private var overlayView: ScrollingSubtitleView? = null
+    private var overlayTargetAlpha = 1f
     private var mockIndex = 0
+    private var mockOffset = 0
     private var mode = Mode.OFF
     private var bridgeBound = false
     private var pendingUpdate: PlaybackUpdate? = null
@@ -46,8 +45,13 @@ class OverlayService : Service() {
 
     private val mockTicker = object : Runnable {
         override fun run() {
-            showOverlayText(getString(MOCK_LINES[mockIndex % MOCK_LINES.size]))
-            mockIndex += 1
+            val text = getString(MOCK_LINES[mockIndex % MOCK_LINES.size])
+            showOverlayText(text, characterOffset = mockOffset)
+            mockOffset += 1
+            if (mockOffset >= text.length + MOCK_TRAILING_TICKS) {
+                mockIndex += 1
+                mockOffset = 0
+            }
             handler.postDelayed(this, MOCK_INTERVAL_MS)
         }
     }
@@ -97,6 +101,7 @@ class OverlayService : Service() {
         mode = Mode.MOCK
         startAsForeground(R.string.overlay_notification_mock)
         mockIndex = 0
+        mockOffset = 0
         handler.removeCallbacks(mockTicker)
         mockTicker.run()
     }
@@ -171,11 +176,15 @@ class OverlayService : Service() {
 
         val visualChanged = when (update.status) {
             PlaybackIpcProtocol.STATUS_PLAYING -> {
-                if (update.text.isEmpty()) hideOverlayView() else showOverlayText(update.text, 1f)
+                if (update.text.isEmpty()) hideOverlayView() else {
+                    showOverlayText(update.text, 1f, update.characterOffset)
+                }
             }
 
             PlaybackIpcProtocol.STATUS_PAUSED -> {
-                if (update.text.isEmpty()) hideOverlayView() else showOverlayText(update.text, PAUSED_ALPHA)
+                if (update.text.isEmpty()) hideOverlayView() else {
+                    showOverlayText(update.text, PAUSED_ALPHA, update.characterOffset, playing = false)
+                }
             }
 
             PlaybackIpcProtocol.STATUS_IDLE,
@@ -210,36 +219,40 @@ class OverlayService : Service() {
         lastSequence = Long.MIN_VALUE
     }
 
-    private fun showOverlayText(text: String, alpha: Float = 1f): Boolean {
+    private fun showOverlayText(
+        text: String,
+        alpha: Float = 1f,
+        characterOffset: Int = 0,
+        playing: Boolean = true,
+    ): Boolean {
         overlayView?.let { view ->
-            var changed = false
-            if (view.text.toString() != text) {
-                view.text = text
-                changed = true
+            val textChanged = view.text.toString() != text
+            val alphaChanged = overlayTargetAlpha != alpha
+            val contentChanged = view.update(text, characterOffset, playing)
+            if (!textChanged && !alphaChanged) return contentChanged
+
+            overlayTargetAlpha = alpha
+            view.animate().cancel()
+            if (textChanged) {
+                view.alpha = 0f
+                view.translationY = 3.dp.toFloat()
             }
-            if (view.alpha != alpha) {
-                view.alpha = alpha
-                changed = true
-            }
-            return changed
+            view.animate()
+                .alpha(alpha)
+                .translationY(0f)
+                .setDuration(TEXT_TRANSITION_MS)
+                .setInterpolator(DecelerateInterpolator())
+                .start()
+            return true
         }
 
-        val view = TextView(this).apply {
-            this.text = text
+        overlayTargetAlpha = alpha
+        val view = ScrollingSubtitleView(this).apply {
+            update(text, characterOffset, playing)
             this.alpha = alpha
-            setTextColor(Color.WHITE)
-            textSize = 18f
-            gravity = Gravity.CENTER
-            maxLines = 2
-            ellipsize = TextUtils.TruncateAt.END
-            setPadding(18.dp, 12.dp, 18.dp, 12.dp)
-            background = GradientDrawable().apply {
-                setColor(Color.argb(220, 24, 31, 46))
-                cornerRadius = 14.dp.toFloat()
-            }
         }
         val parameters = WindowManager.LayoutParams(
-            (resources.displayMetrics.widthPixels * OVERLAY_WIDTH_RATIO).toInt(),
+            WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -256,6 +269,18 @@ class OverlayService : Service() {
             y = preferences.getInt(PREF_Y, 120.dp)
         }
         installDragHandler(view, parameters)
+        view.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            // Longer text can widen the subtitle after it was dragged to an edge.
+            val maxX = (resources.displayMetrics.widthPixels - view.width).coerceAtLeast(0)
+            val maxY = (resources.displayMetrics.heightPixels - view.height).coerceAtLeast(0)
+            val x = parameters.x.coerceIn(0, maxX)
+            val y = parameters.y.coerceIn(0, maxY)
+            if (parameters.x != x || parameters.y != y) {
+                parameters.x = x
+                parameters.y = y
+                windowManager.updateViewLayout(view, parameters)
+            }
+        }
 
         windowManager.addView(view, parameters)
         overlayView = view
@@ -264,6 +289,7 @@ class OverlayService : Service() {
 
     private fun hideOverlayView(): Boolean {
         val view = overlayView ?: return false
+        view.animate().cancel()
         runCatching { windowManager.removeView(view) }
         overlayView = null
         return true
@@ -337,8 +363,9 @@ class OverlayService : Service() {
         private const val ACTION_HIDE = "io.github.alice060404.wereadlyrics.action.HIDE"
         private const val CHANNEL_ID = "overlay"
         private const val NOTIFICATION_ID = 1
-        private const val MOCK_INTERVAL_MS = 3_000L
-        private const val OVERLAY_WIDTH_RATIO = 0.88
+        private const val MOCK_INTERVAL_MS = 150L
+        private const val MOCK_TRAILING_TICKS = 8
+        private const val TEXT_TRANSITION_MS = 180L
         private const val PAUSED_ALPHA = 0.65f
         private const val PREFERENCES_NAME = "overlay_position"
         private const val PREF_X = "x"

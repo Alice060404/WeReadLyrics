@@ -92,13 +92,14 @@ internal class PlaybackIpcClient(
             PlaybackStatus.PAUSED -> PlaybackIpcProtocol.STATUS_PAUSED
         }
         try {
-            target.publishState(
+            target.publishPositionedState(
                 sourceInstanceId,
                 sessionId,
                 state.lastSequence,
                 status,
                 text,
                 sourceToken,
+                (state.current?.characterOffset ?: 0).coerceIn(0, (text.length - 1).coerceAtLeast(0)),
             )
         } catch (error: Throwable) {
             synchronized(lock) {

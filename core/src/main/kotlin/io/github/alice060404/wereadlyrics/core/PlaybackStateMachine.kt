@@ -22,6 +22,14 @@ class PlaybackStateMachine(
             is TextPrepared -> prepare(event)
             is PlaybackStarted -> startPlayback(event)
             is RangeAdvanced -> advance(event)
+            is PositionAdvanced -> {
+                val current = state.current
+                if (state.status == PlaybackStatus.PLAYING && current?.itemId == event.itemId &&
+                    event.characterOffset in current.text.indices
+                ) {
+                    state = state.copy(current = current.copy(characterOffset = event.characterOffset))
+                }
+            }
             is Paused -> pause()
             is Resumed -> resume()
             is Seeked -> resetForDiscontinuity()

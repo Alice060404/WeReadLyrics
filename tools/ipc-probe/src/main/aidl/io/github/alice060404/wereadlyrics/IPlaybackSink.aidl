@@ -11,4 +11,14 @@ interface IPlaybackSink {
         String text,
         IBinder sourceToken
     );
+
+    oneway void publishPositionedState(
+        long sourceInstanceId,
+        long sessionId,
+        long sequence,
+        int status,
+        String text,
+        IBinder sourceToken,
+        int characterOffset
+    );
 }

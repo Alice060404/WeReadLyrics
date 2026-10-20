@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import io.github.alice060404.wereadlyrics.core.ControlAction
+import io.github.alice060404.wereadlyrics.core.CharacterProgressObserved
 import io.github.alice060404.wereadlyrics.core.ControlObserved
 import io.github.alice060404.wereadlyrics.core.HighlightCleared
 import io.github.alice060404.wereadlyrics.core.HighlightObserved
@@ -45,6 +46,10 @@ internal class SyncObserver(
 
     fun onHighlightCleared() {
         accept(HighlightCleared(SystemClock.elapsedRealtime()))
+    }
+
+    fun onProgress(itemId: String, characterOffset: Int) {
+        accept(CharacterProgressObserved(SystemClock.elapsedRealtime(), itemId, characterOffset))
     }
 
     fun onControl(action: ControlAction) {
