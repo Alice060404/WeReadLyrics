@@ -22,8 +22,8 @@ android {
         applicationId = "io.github.alice060404.wereadlyrics"
         minSdk = 24
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.9.0"
+        versionCode = 12
+        versionName = "0.10.0"
     }
 
     signingConfigs {

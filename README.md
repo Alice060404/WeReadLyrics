@@ -1,10 +1,10 @@
 # WeReadLyrics
 
-Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的悬浮窗显示当前实际读到的句子。最终 0.9.0 已在一加 11 通过快速回归，并在 Redmi K80 至尊版当前临时 Root 会话中验证可用。
+Android LSPosed 模块：在微信读书 AI 朗读时，向其他应用上方的悬浮窗显示当前实际读到的句子。0.10.0 使用透明文字和阴影，长句在两行窗口内随句内字符进度滚动，不再以省略号截断。
 
-当前 0.9.0 仅启用微信读书 10.2.2（versionCode 10167650）的内部 Hook。未知版本会安全停用业务 Hook，等待重新分析和验证。
+当前仅启用微信读书 10.2.2（versionCode 10167650）的内部 Hook。未知版本会安全停用业务 Hook，等待重新分析和验证。升级模块后，需彻底退出并重新打开微信读书，让新的字符进度 Hook 生效。
 
-当前入口使用设备已确认的 Modern libxposed API 102。同步核心通过 28 项 JVM 测试；悬浮窗、逐次鉴权 IPC、宿主退出清屏及版本门禁均有真机证据。正文只在进程内传递，不写入磁盘或诊断日志。
+当前入口使用设备已确认的 Modern libxposed API 102。同步核心通过 34 项 JVM 测试；0.10.0 已完成模拟器滚动显示与实际朗读进度链路验证，真机回归待完成。0.9.0 曾在一加 11 和 Redmi K80 至尊版验证可用。正文只在进程内传递，不写入磁盘或诊断日志。
 
 ## 本地构建
 
@@ -41,8 +41,18 @@ chmod 600 keystore.properties
 | `KEY_ALIAS` | 签名私钥别名 |
 | `KEY_PASSWORD` | 签名私钥密码 |
 
-push 到 `main` 后，GitHub Actions 使用 JDK 17、Android SDK 36 / Build Tools 36.0.0，依次运行核心测试、Release lint、正式签名构建及证书核验，再自动发布公开的 GitHub Release，附上 APK 和 `SHA256SUMS`。也可在 Actions 中手动运行；仅允许从 `main` 发布。无需额外配置 `GITHUB_TOKEN`。
+push 到 `main` 或在 Actions 中手动运行，只执行核心测试、Debug lint 和 Debug 构建，上传 `debug-apk` 工作流产物，不创建 Release，也不需要签名 Secrets。工具链使用 JDK 17、Android SDK 36 / Build Tools 36.0.0。
 
-Release 标签使用 `v<versionName>-build.<run_number>`，例如 `v0.9.0-build.1`。每次 push 生成独立 Release；重跑同一次 workflow 会更新该 Release 的附件。APK 内的 `versionName`、`versionCode` 以 `app/build.gradle.kts` 为准，正式版本升级时应同步递增。构建成功不代表真机注入或朗读同步已经通过验证。
+只有推送 `v*` 标签才执行正式签名构建、Release lint、证书核验并发布 GitHub Release，附上 APK 和 `SHA256SUMS`。正式标签使用 `v0.10.0`；测试版可使用 `v0.10.0-beta.1`，并自动标记为预发布。标签必须与 APK 的 `versionName` 完全一致（加上前缀 `v`），不匹配会中止发布；测试版也需先将 `versionName` 改为对应的 `0.10.0-beta.1`。
+
+当前版本为 `versionName = "0.10.0"`、`versionCode = 12`。后续升级时需手动更新版本号并递增 `versionCode`。提交并检查改动后，手动发布：
+
+```bash
+git push origin main
+git tag -a v0.10.0 -m "Release v0.10.0"
+git push origin v0.10.0
+```
+
+重跑同一次标签工作流会更新该 Release 的附件，不改变标签。无需额外配置 `GITHUB_TOKEN`。构建成功不代表真机注入或朗读同步已经通过验证。
 
 不要提交 APK、签名密钥、反编译树、书籍正文或设备日志。
