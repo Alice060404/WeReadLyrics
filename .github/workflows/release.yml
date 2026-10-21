@@ -108,12 +108,19 @@ jobs:
             echo "::error::Built APK version v$version does not match tag $tag."
             exit 1
           fi
+          debug_version=$(python3 -c 'import json; d=json.load(open("app/build/outputs/apk/debug/output-metadata.json")); print(d["elements"][0]["versionName"])')
+          if [[ "$debug_version" != "$version" ]]; then
+            echo "::error::Debug APK version $debug_version does not match Release APK version $version."
+            exit 1
+          fi
+          test -s app/build/outputs/apk/debug/app-debug.apk
           mkdir -p dist
           cp app/build/outputs/apk/release/app-release.apk "dist/WeReadLyrics-${tag}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/WeReadLyrics-${tag}-debug.apk"
           (cd dist && sha256sum ./*.apk > SHA256SUMS)
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-      - name: Upload verified APK
+      - name: Upload release assets
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
@@ -134,7 +141,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download verified APK
+      - name: Download release assets
         uses: actions/download-artifact@v4
         with:
           name: signed-release

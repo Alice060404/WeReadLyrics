@@ -49,7 +49,7 @@ chmod 600 keystore.properties
 
 push 到 `main` 或在 Actions 中手动运行，只执行核心测试、Debug lint 和 Debug 构建，上传 `debug-apk` 工作流产物，不创建 Release，也不需要签名 Secrets。工具链使用 JDK 17、Android SDK 36 / Build Tools 36.0.0。
 
-只有推送 `v*` 标签才执行正式签名构建、Release lint、证书核验并发布 GitHub Release，附上 APK 和 `SHA256SUMS`。正式标签使用 `v0.10.0`；测试版可使用 `v0.10.0-beta.1`，并自动标记为预发布。标签必须与 APK 的 `versionName` 完全一致（加上前缀 `v`），不匹配会中止发布；测试版也需先将 `versionName` 改为对应的 `0.10.0-beta.1`。
+只有推送 `v*` 标签才执行正式签名构建、Release lint、证书核验并发布 GitHub Release，同时附上正式签名 APK（`WeReadLyrics-v版本号.apk`）、Debug APK（`WeReadLyrics-v版本号-debug.apk`）和包含两者校验和的 `SHA256SUMS`。Debug APK 使用构建环境的调试签名，与正式签名不同，两个版本不能互相覆盖安装。正式标签使用 `v0.10.0`；测试版可使用 `v0.10.0-beta.1`，并自动标记为预发布。标签必须与 APK 的 `versionName` 完全一致（加上前缀 `v`），不匹配会中止发布；测试版也需先将 `versionName` 改为对应的 `0.10.0-beta.1`。
 
 当前版本为 `versionName = "0.10.0"`、`versionCode = 12`。后续升级时需手动更新版本号并递增 `versionCode`。提交并检查改动后，手动发布：
 
