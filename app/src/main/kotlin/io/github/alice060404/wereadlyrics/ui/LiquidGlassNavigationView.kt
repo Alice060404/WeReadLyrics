@@ -49,6 +49,7 @@ class LiquidGlassNavigationView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : FrameLayout(context, attrs) {
+    private var settings = GlassSettings()
     private val surfaceColor = MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface)
     private val onSurfaceColor = MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface)
     private val accentColor = MaterialColors.getColor(this, androidx.appcompat.R.attr.colorPrimary)
@@ -254,6 +255,16 @@ class LiquidGlassNavigationView @JvmOverloads constructor(
         })
     }
 
+    internal fun applySettings(value: GlassSettings) {
+        val safe = value.normalized()
+        if (settings == safe) return
+        settings = safe
+        glass.applySettings(safe)
+        indicator.applySettings(safe)
+        requestLayout()
+        requestBackdropUpdate()
+    }
+
     fun setOnItemSelectedListener(listener: (Int) -> Unit) {
         itemSelected = listener
     }
@@ -284,7 +295,7 @@ class LiquidGlassNavigationView @JvmOverloads constructor(
             val metrics = tab.paint.fontMetrics
             ceil((metrics.descent - metrics.ascent) * lines).toInt()
         }
-        val navigationHeight = maxOf(64.dp, 24.dp + 2.dp + labelHeight + 16.dp)
+        val navigationHeight = maxOf(settings.height.dp, 24.dp + 2.dp + labelHeight + 16.dp)
         val lensWidth = ((navigationWidth - 8.dp).toFloat() / items.size).roundToInt()
         val lensHeight = navigationHeight - 8.dp
         if (indicator.layoutParams.width != lensWidth || indicator.layoutParams.height != lensHeight) {

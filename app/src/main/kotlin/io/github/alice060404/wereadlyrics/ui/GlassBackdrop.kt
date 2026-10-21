@@ -85,6 +85,7 @@ internal class GlassSurfaceView(
     private val surfaceColor: Int,
     private val isIndicator: Boolean,
 ) : FrameLayout(context) {
+    private var settings = GlassSettings()
     var backdrop: GlassBackdrop? = null
         set(value) {
             field = value
@@ -148,16 +149,7 @@ internal class GlassSurfaceView(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         if (w == 0 || h == 0) return
-        val density = resources.displayMetrics.density
-        updateRefraction = if (Build.VERSION.SDK_INT >= 33) {
-            GlassEffects.install(image, w, h, density, isIndicator)
-        } else {
-            if (Build.VERSION.SDK_INT >= 31 && !isIndicator) {
-                image.setRenderEffect(RenderEffect.createBlurEffect(8f * density, 8f * density, Shader.TileMode.CLAMP))
-            }
-            null
-        }
-        updateRefraction?.invoke(interactionProgress)
+        updateEffects()
         rim.shader = LinearGradient(
             0f, 0f, w.toFloat(), h.toFloat(),
             intArrayOf(Color.WHITE, Color.argb(20, 255, 255, 255), Color.argb(150, 255, 255, 255)),
@@ -169,6 +161,31 @@ internal class GlassSurfaceView(
         invalidateOutline()
     }
 
+    fun applySettings(value: GlassSettings) {
+        if (settings == value) return
+        val effectsChanged = settings.blur != value.blur || settings.refraction != value.refraction ||
+            settings.dispersion != value.dispersion
+        settings = value
+        if (effectsChanged && width > 0 && height > 0) updateEffects()
+        image.invalidate()
+        invalidate()
+    }
+
+    private fun updateEffects() {
+        val density = resources.displayMetrics.density
+        updateRefraction = if (Build.VERSION.SDK_INT >= 33) {
+            GlassEffects.install(image, width, height, density, isIndicator, settings)
+        } else {
+            if (Build.VERSION.SDK_INT >= 31 && !isIndicator) {
+                image.setRenderEffect(if (settings.blur == 0) null else RenderEffect.createBlurEffect(
+                    settings.blur * density, settings.blur * density, Shader.TileMode.CLAMP,
+                ))
+            }
+            null
+        }
+        updateRefraction?.invoke(interactionProgress)
+    }
+
     fun invalidateBackdrop() = image.invalidate()
 
     override fun onDrawForeground(canvas: Canvas) {
@@ -178,7 +195,7 @@ internal class GlassSurfaceView(
             // The original's neutral selection surface fades as the lens lifts.
             ColorUtils.setAlphaComponent(if (dark) Color.WHITE else Color.BLACK, (25f * (1f - progress)).toInt())
         } else {
-            ColorUtils.setAlphaComponent(surfaceColor, if (Build.VERSION.SDK_INT >= 31) 102 else 230)
+            ColorUtils.setAlphaComponent(surfaceColor, (settings.opacity * 255 / 100))
         }
         canvas.drawRoundRect(bounds, height / 2f, height / 2f, tint)
         if (progress > 0.001f) {
@@ -206,7 +223,8 @@ internal class GlassSurfaceView(
 /** Mutate uniforms on cached shaders; no shader recompilation on animation frames. */
 @RequiresApi(33)
 private object GlassEffects {
-    fun install(image: View, width: Int, height: Int, density: Float, indicator: Boolean): (Float) -> Unit {
+    fun install(image: View, width: Int, height: Int, density: Float, indicator: Boolean, settings: GlassSettings): (Float) -> Unit {
+        val strength = settings.refraction / 100f
         val shader = RuntimeShader(
             if (indicator) RoundedRectRefractionWithDispersionShaderString else RoundedRectRefractionShaderString,
         ).apply {
@@ -215,9 +233,9 @@ private object GlassEffects {
             val radius = minOf(width, height) / 2f
             setFloatUniform("cornerRadii", radius, radius, radius, radius)
             setFloatUniform("depthEffect", 0f)
-            setFloatUniform("refractionHeight", if (indicator) 0.01f else minOf(24f * density, radius))
-            setFloatUniform("refractionAmount", if (indicator) 0f else -24f * density)
-            if (indicator) setFloatUniform("chromaticAberration", 1f)
+            setFloatUniform("refractionHeight", if (indicator) 0.01f else minOf(24f * density * strength, radius).coerceAtLeast(0.01f))
+            setFloatUniform("refractionAmount", if (indicator) 0f else -24f * density * strength)
+            if (indicator) setFloatUniform("chromaticAberration", settings.dispersion / 100f)
         }
         val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")
         val effect = if (indicator) {
@@ -226,14 +244,16 @@ private object GlassEffects {
         } else {
             val saturation = android.graphics.ColorMatrix().apply { setSaturation(1.5f) }
             val vibrant = RenderEffect.createColorFilterEffect(android.graphics.ColorMatrixColorFilter(saturation))
-            val blur = RenderEffect.createBlurEffect(8f * density, 8f * density, Shader.TileMode.CLAMP)
-            RenderEffect.createChainEffect(lens, RenderEffect.createChainEffect(blur, vibrant))
+            val background = if (settings.blur == 0) vibrant else RenderEffect.createChainEffect(
+                RenderEffect.createBlurEffect(settings.blur * density, settings.blur * density, Shader.TileMode.CLAMP), vibrant,
+            )
+            RenderEffect.createChainEffect(lens, background)
         }
         image.setRenderEffect(effect)
         return { progress ->
             if (indicator) {
-                shader.setFloatUniform("refractionHeight", (minOf(10f * density, height / 2f) * progress).coerceAtLeast(0.01f))
-                shader.setFloatUniform("refractionAmount", -14f * density * progress)
+                shader.setFloatUniform("refractionHeight", (minOf(10f * density * strength, height / 2f) * progress).coerceAtLeast(0.01f))
+                shader.setFloatUniform("refractionAmount", -14f * density * strength * progress)
                 // Image filters snapshot uniforms. Rebind the filter while reusing
                 // the compiled RuntimeShader, so pressure actually changes the lens.
                 image.setRenderEffect(RenderEffect.createRuntimeShaderEffect(shader, "content"))

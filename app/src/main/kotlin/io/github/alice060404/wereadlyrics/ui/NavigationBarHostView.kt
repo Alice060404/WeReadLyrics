@@ -14,6 +14,7 @@ class NavigationBarHostView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : FrameLayout(context, attrs) {
+    private var glassSettings = GlassSettings()
     private var glass: LiquidGlassNavigationView? = null
     private var material: BottomNavigationView? = null
     private var backdropSource: View? = null
@@ -43,6 +44,7 @@ class NavigationBarHostView @JvmOverloads constructor(
         material = null
         val control = when (style) {
             NavigationStyle.LIQUID_GLASS -> LiquidGlassNavigationView(context).also { view ->
+                view.applySettings(glassSettings)
                 view.elevation = 8.dp.toFloat()
                 view.selectedItemId = currentItem
                 backdropSource?.let(view::setBackdropSource)
@@ -72,6 +74,11 @@ class NavigationBarHostView @JvmOverloads constructor(
     fun setBackdropSource(source: View) {
         backdropSource = source
         glass?.setBackdropSource(source)
+    }
+
+    internal fun applyGlassSettings(settings: GlassSettings) {
+        glassSettings = settings.normalized()
+        glass?.applySettings(glassSettings)
     }
 
     fun requestBackdropUpdate() {

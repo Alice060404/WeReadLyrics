@@ -21,4 +21,24 @@ internal class PersonalizationPreferences(context: Context) {
         set(value) {
             preferences.edit().putString("navigation_style", value.preferenceValue).apply()
         }
+
+    var glassSettings: GlassSettings
+        get() = GlassSettings(
+            height = preferences.getInt("glass_height", 64),
+            blur = preferences.getInt("glass_blur", 8),
+            opacity = preferences.getInt("glass_opacity", 40),
+            refraction = preferences.getInt("glass_refraction", 100),
+            dispersion = preferences.getInt("glass_dispersion", 100),
+        ).normalized()
+        set(value) {
+            val safe = value.normalized()
+            preferences.edit()
+                .putInt("glass_height", safe.height)
+                .putInt("glass_blur", safe.blur)
+                .putInt("glass_opacity", safe.opacity)
+                .putInt("glass_refraction", safe.refraction)
+                .putInt("glass_dispersion", safe.dispersion)
+                .apply()
+        }
+
 }
