@@ -47,17 +47,29 @@ chmod 600 keystore.properties
 | `KEY_ALIAS` | 签名私钥别名 |
 | `KEY_PASSWORD` | 签名私钥密码 |
 
-push 到 `main` 或在 Actions 中手动运行，只执行核心测试、Debug lint 和 Debug 构建，上传 `debug-apk` 工作流产物，不创建 Release，也不需要签名 Secrets。工具链使用 JDK 17、Android SDK 36 / Build Tools 36.0.0。
+push 到 `main` 或在 Actions 中手动运行，执行发布脚本测试、核心测试、Debug lint 和 Debug 构建，上传 `debug-apk` 工作流产物，不创建 Release，也不需要签名 Secrets。工具链使用 JDK 17、Android SDK 36 / Build Tools 36.0.0。
 
 只有推送 `v*` 标签才执行正式签名构建、Release lint、证书核验并发布 GitHub Release，同时附上正式签名 APK（`WeReadLyrics-v版本号.apk`）、Debug APK（`WeReadLyrics-v版本号-debug.apk`）和包含两者校验和的 `SHA256SUMS`。Debug APK 使用构建环境的调试签名，与正式签名不同，两个版本不能互相覆盖安装。正式标签使用 `v0.10.0`；测试版可使用 `v0.10.0-beta.1`，并自动标记为预发布。标签必须与 APK 的 `versionName` 完全一致（加上前缀 `v`），不匹配会中止发布；测试版也需先将 `versionName` 改为对应的 `0.10.0-beta.1`。
 
-当前版本为 `versionName = "0.10.0"`、`versionCode = 12`。后续升级时需手动更新版本号并递增 `versionCode`。提交并检查改动后，手动发布：
+版本号以 `app/build.gradle.kts` 为准。完成开发并提交所有改动后，在 WSL / Linux 中运行发布脚本（需要 Git、Python 3、origin 推送权限及上述四项签名 Secrets）：
 
 ```bash
-git push origin main
-git tag -a v0.10.0 -m "Release v0.10.0"
-git push origin v0.10.0
+# 预览：默认补丁号 +1，versionCode +1，不修改文件或推送
+./scripts/publish-release.py --dry-run
+
+# 一键发布：例如 0.10.0 / 12 → 0.10.1 / 13
+./scripts/publish-release.py
+
+# 也可指定更高版本；预发布标签会被 Actions 标记为预发布
+./scripts/publish-release.py 0.11.0
+# ./scripts/publish-release.py 0.11.0-beta.1
 ```
+
+脚本要求当前分支为 `main` 且工作区干净，检查本地/远端标签重复和远端 main 是否已包含在本地历史中。检查通过后只修改 Gradle 版本字段，创建发布提交和附注标签，再用 `git push --atomic` 一次推送 main 与新标签。`--dry-run` 会读取远端引用，但不修改文件、提交、标签或远端。脚本不读取签名密钥，实际构建、核验和两种 APK 发布由 Actions 完成；推送成功不等于 Release 已发布，需查看 Actions 结果。
+
+脚本集成测试可通过 `python3 -B -m unittest discover -s scripts/tests -v` 运行，测试只操作临时本地仓库，不连接 GitHub；CI 会在构建前执行这些测试。
+
+如果推送失败，脚本保留本地发布提交和标签，并输出重试推送命令。解决认证或远端分支冲突后按输出命令重试；不要直接再次运行版本递增命令，以免重复递增。若远端已有同名标签，应先核对其内容，不要强制覆盖。
 
 重跑同一次标签工作流会更新该 Release 的附件，不改变标签。无需额外配置 `GITHUB_TOKEN`。构建成功不代表真机注入或朗读同步已经通过验证。
 
