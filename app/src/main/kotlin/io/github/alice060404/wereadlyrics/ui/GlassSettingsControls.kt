@@ -24,6 +24,11 @@ internal class GlassSettingsControls(
         addSlider(R.string.glass_opacity, 0, 100, false, true, { it.opacity }) { s, v -> s.copy(opacity = v) }
         addSlider(R.string.glass_refraction, 0, 200, false, Build.VERSION.SDK_INT >= 33, { it.refraction }) { s, v -> s.copy(refraction = v) }
         addSlider(R.string.glass_dispersion, 0, 200, false, Build.VERSION.SDK_INT >= 33, { it.dispersion }) { s, v -> s.copy(dispersion = v) }
+        addSlider(R.string.glass_elasticity, 0, 100, false, true, { it.elasticity }) { s, v -> s.copy(elasticity = v) }
+        container.addView(MaterialTextView(container.context).apply {
+            setText(R.string.glass_elasticity_hint)
+            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+        })
         if (Build.VERSION.SDK_INT < 33) {
             container.addView(MaterialTextView(container.context).apply {
                 setText(if (Build.VERSION.SDK_INT < 31) R.string.glass_legacy_hint else R.string.glass_blur_only_hint)

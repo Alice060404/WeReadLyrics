@@ -259,6 +259,17 @@ class LiquidGlassNavigationView @JvmOverloads constructor(
         val safe = value.normalized()
         if (settings == safe) return
         settings = safe
+        // Critical damping at zero; the original spring response at 100%.
+        val elasticity = safe.elasticity / 100f
+        scaleXSpring.spring?.setDampingRatio(1f - 0.4f * elasticity)
+        scaleYSpring.spring?.setDampingRatio(1f - 0.3f * elasticity)
+        if (safe.elasticity == 0) {
+            scaleXSpring.cancel()
+            scaleYSpring.cancel()
+            indicator.scaleX = 1f
+            indicator.scaleY = 1f
+        }
+        updateGlassMotion()
         glass.applySettings(safe)
         indicator.applySettings(safe)
         requestLayout()
@@ -498,18 +509,19 @@ class LiquidGlassNavigationView @JvmOverloads constructor(
         if (!renderingActive || cellWidth <= 0f) return
         val progress = pressure.value.coerceIn(0f, 1f)
         val normalizedVelocity = if (cellWidth > 0f) motionVelocity / (cellWidth * items.lastIndex * 10f) else 0f
-        val velocity = normalizedVelocity.coerceIn(-0.26f, 0.26f)
-        val liftedScale = 1f + (78f / 56f - 1f) * progress
+        val elasticity = settings.elasticity / 100f
+        val velocity = normalizedVelocity.coerceIn(-0.26f, 0.26f) * elasticity
+        val liftedScale = 1f + (78f / 56f - 1f) * progress * elasticity
         scaleXSpring.animateToFinalPosition(liftedScale / (1f - velocity * 0.75f))
         scaleYSpring.animateToFinalPosition(liftedScale * (1f - velocity * 0.25f))
-        val panelScale = 1f + 16.dp.toFloat() / width * progress
+        val panelScale = 1f + 16.dp.toFloat() / width * progress * elasticity
         glass.scaleX = panelScale
         glass.scaleY = panelScale
         row.scaleX = panelScale
         row.scaleY = panelScale
-        glass.translationX = panelOffset.value
-        row.translationX = panelOffset.value
-        indicator.translationX = position.value + panelOffset.value
+        glass.translationX = panelOffset.value * elasticity
+        row.translationX = panelOffset.value * elasticity
+        indicator.translationX = position.value + panelOffset.value * elasticity
         indicator.sourceOffsetX = 4.dp + position.value
         indicator.sourceOffsetY = 4.dp.toFloat()
         glass.lightPositionX = 4.dp + position.value + cellWidth / 2f
@@ -518,8 +530,8 @@ class LiquidGlassNavigationView @JvmOverloads constructor(
         indicator.invalidateBackdrop()
         for (index in 0 until lensRow.childCount) {
             lensRow.getChildAt(index).apply {
-                scaleX = 1f + 0.2f * progress
-                scaleY = 1f + 0.2f * progress
+                scaleX = 1f + 0.2f * progress * elasticity
+                scaleY = 1f + 0.2f * progress * elasticity
             }
         }
         requestLensUpdate()

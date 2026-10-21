@@ -71,9 +71,11 @@
     <string name="glass_opacity">底色不透明度</string>
     <string name="glass_refraction">折射强度</string>
     <string name="glass_dispersion">色散强度</string>
+    <string name="glass_elasticity">动效弹性</string>
+    <string name="glass_elasticity_hint" formatted="false">数值越低，膨胀、拉伸和回弹越轻。0% 保留切页滑动并关闭弹性形变；100% 为原有效果。</string>
     <string name="glass_value_dp">%1$s：%2$d dp</string>
     <string name="glass_value_percent">%1$s：%2$d%%</string>
     <string name="glass_reset">恢复玻璃默认参数</string>
-    <string name="glass_legacy_hint">此设备不支持背景模糊、折射和色散，可调整高度与底色不透明度。</string>
+    <string name="glass_legacy_hint">此设备不支持背景模糊、折射和色散，可调整高度、底色不透明度与动效弹性。</string>
     <string name="glass_blur_only_hint">此设备支持背景模糊；折射和色散需要 Android 13 或更高版本。</string>
 </resources>

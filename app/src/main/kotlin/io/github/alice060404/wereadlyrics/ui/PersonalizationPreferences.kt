@@ -29,6 +29,7 @@ internal class PersonalizationPreferences(context: Context) {
             opacity = preferences.getInt("glass_opacity", 40),
             refraction = preferences.getInt("glass_refraction", 100),
             dispersion = preferences.getInt("glass_dispersion", 100),
+            elasticity = preferences.getInt("glass_elasticity", 100),
         ).normalized()
         set(value) {
             val safe = value.normalized()
@@ -38,6 +39,7 @@ internal class PersonalizationPreferences(context: Context) {
                 .putInt("glass_opacity", safe.opacity)
                 .putInt("glass_refraction", safe.refraction)
                 .putInt("glass_dispersion", safe.dispersion)
+                .putInt("glass_elasticity", safe.elasticity)
                 .apply()
         }
 
