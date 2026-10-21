@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.FrameLayout
 import android.widget.RadioGroup
 import android.widget.TextView
@@ -19,6 +20,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
+import io.github.alice060404.wereadlyrics.ui.GlassSettingsControls
 import io.github.alice060404.wereadlyrics.ui.NavigationBarHostView
 import io.github.alice060404.wereadlyrics.ui.NavigationStyle
 import io.github.alice060404.wereadlyrics.ui.PersonalizationPreferences
@@ -79,6 +81,7 @@ class MainActivity : AppCompatActivity() {
         navigation.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             updateNavigationClearance()
         }
+        navigation.applyGlassSettings(personalizationPreferences.glassSettings)
         applyNavigationStyle(personalizationPreferences.navigationStyle)
         configurePersonalization()
         navigation.setOnItemSelectedListener { itemId ->
@@ -119,6 +122,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configurePersonalization() {
+        GlassSettingsControls(findViewById<LinearLayout>(R.id.glass_parameters), personalizationPreferences) { settings ->
+            navigation.applyGlassSettings(settings)
+        }
         val entry = findViewById<View>(R.id.personalization_entry)
         ViewCompat.setScreenReaderFocusable(entry, true)
         entry.setOnClickListener { showPersonalization(true) }
@@ -142,6 +148,7 @@ class MainActivity : AppCompatActivity() {
     private fun applyNavigationStyle(style: NavigationStyle) {
         navigation.setStyle(style)
         val glass = style == NavigationStyle.LIQUID_GLASS
+        findViewById<View>(R.id.glass_parameters_card).visibility = if (glass) View.VISIBLE else View.GONE
         val density = resources.displayMetrics.density
         navigation.layoutParams = (navigation.layoutParams as FrameLayout.LayoutParams).apply {
             marginStart = if (glass) (24 * density).toInt() else 0

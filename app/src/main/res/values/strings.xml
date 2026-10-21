@@ -64,4 +64,16 @@
     <string name="navigation_style_summary">底部导航栏 · %1$s</string>
     <string name="navigation_style_glass_description">悬浮玻璃胶囊，带折射、放大与弹簧动效。效果随设备能力调整。</string>
     <string name="navigation_style_material_description">Material 3 导航栏，使用图标、文字与选中指示呈现当前页面。</string>
+    <string name="glass_parameters_title">液态玻璃参数</string>
+    <string name="glass_parameters_hint">调整后立即预览并自动保存。高度以 dp 为单位；大字体下会自动增高以容纳文字。</string>
+    <string name="glass_height">导航栏高度</string>
+    <string name="glass_blur">背景模糊</string>
+    <string name="glass_opacity">底色不透明度</string>
+    <string name="glass_refraction">折射强度</string>
+    <string name="glass_dispersion">色散强度</string>
+    <string name="glass_value_dp">%1$s：%2$d dp</string>
+    <string name="glass_value_percent">%1$s：%2$d%%</string>
+    <string name="glass_reset">恢复玻璃默认参数</string>
+    <string name="glass_legacy_hint">此设备不支持背景模糊、折射和色散，可调整高度与底色不透明度。</string>
+    <string name="glass_blur_only_hint">此设备支持背景模糊；折射和色散需要 Android 13 或更高版本。</string>
 </resources>
