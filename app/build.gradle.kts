@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "io.github.alice060404.wereadlyrics"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 12
         versionName = "0.10.0"
@@ -80,5 +80,12 @@ tasks.matching { it.name == "packageRelease" || it.name == "signReleaseBundle" }
 
 dependencies {
     implementation(project(":core"))
+    implementation("com.google.android.material:material:1.14.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("androidx.activity:activity-ktx:1.12.4")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+    implementation("androidx.dynamicanimation:dynamicanimation:1.1.0")
+    implementation("io.github.libxposed:service:101.0.0")
     compileOnly("io.github.libxposed:api:102.0.0")
+    testImplementation(kotlin("test-junit"))
 }

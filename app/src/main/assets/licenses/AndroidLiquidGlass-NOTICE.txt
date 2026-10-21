@@ -1,0 +1,16 @@
+AndroidLiquidGlass (Backdrop)
+Copyright 2025 Kyant
+https://github.com/Kyant0/AndroidLiquidGlass
+Source revision: 65ab177e90e5c1d8c62e70cf7755841982da65f6
+License: Apache License 2.0 (see AndroidLiquidGlass-LICENSE.txt).
+
+WeReadLyrics adapts the rounded rectangle SDF and refraction shaders from
+backdrop/src/commonMain/kotlin/com/kyant/backdrop/internal/Shaders.kt
+and the glass capsule, highlight and spring interaction design of
+app/src/commonMain/kotlin/com/kyant/backdrop/catalog/components/LiquidBottomTabs.kt.
+The native motion adaptation also follows the spring parameters and
+pressure/highlight behavior of catalog/utils/DampedDragAnimation.kt and
+catalog/utils/InteractiveHighlight.kt. WeReadLyrics adds a front selection
+lens sampling an offscreen accent-colored tab row and removes ripple feedback.
+The integration uses native Android Views, RenderNode and RenderEffect;
+it does not include the Compose catalog or require the source checkout at build time.

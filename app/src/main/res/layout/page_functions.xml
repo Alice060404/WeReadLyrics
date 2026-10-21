@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_margin"
+        android:paddingEnd="@dimen/screen_margin"
+        android:paddingTop="24dp"
+        android:paddingBottom="32dp">
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/functions_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="@string/functions_title"
+            android:textAppearance="?attr/textAppearanceHeadlineLarge"
+            android:textColor="?attr/colorOnSurface" />
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/Widget.WeReadLyrics.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="@string/screen_subtitle" />
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.WeReadLyrics.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.WeReadLyrics.Heading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/playback_title"
+                    android:text="@string/playback_title" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.WeReadLyrics.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/playback_description" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/start_live"
+                    style="@style/Widget.WeReadLyrics.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/start_live_overlay"
+                    app:icon="@drawable/ic_play"
+                    app:iconGravity="textStart" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.WeReadLyrics.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.WeReadLyrics.Heading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/preview_title"
+                    android:text="@string/preview_title" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.WeReadLyrics.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/preview_description" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/show_mock"
+                    style="@style/Widget.Material3Expressive.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:minHeight="56dp"
+                    android:text="@string/show_mock_overlay" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/hide_overlay"
+            style="@style/Widget.Material3Expressive.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="56dp"
+            android:text="@string/hide_overlay" />
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/Widget.WeReadLyrics.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/screen_hint" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

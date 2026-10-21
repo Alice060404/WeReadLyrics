@@ -1,10 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.WeReadLyrics" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.WeReadLyrics" parent="Theme.Material3Expressive.DayNight.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#2E66E5</item>
-        <item name="android:navigationBarColor">#FFFFFF</item>
-        <item name="android:statusBarColor">#FFFFFF</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+    </style>
+    <style name="Widget.WeReadLyrics.Card" parent="Widget.Material3.CardView.Filled">
+        <item name="shapeAppearance">@style/ShapeAppearance.WeReadLyrics.Card</item>
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainer</item>
+        <item name="contentPadding">24dp</item>
+    </style>
+    <style name="ShapeAppearance.WeReadLyrics.Card" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerSize">28dp</item>
+    </style>
+    <style name="Widget.WeReadLyrics.Button" parent="Widget.Material3Expressive.Button">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+    <style name="Widget.WeReadLyrics.Body" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+    <style name="Widget.WeReadLyrics.Heading" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 </resources>
