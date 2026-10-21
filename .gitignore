@@ -67,10 +67,18 @@ replay_pid*
 /docs/root管理器中lsposed条目.jpg
 /docs/sukiSU截图.jpg
 
-# Local development plans and verification records
-/AGENTS.md
-/development-guide.md
+# Local documentation; README is the public project guide.
+/*.md
+!/README.md
 /docs/
+
+# Local maintenance helpers; retain only the script required by release CI.
+/scripts/*
+!/scripts/check-release-apk.sh
+
+# Python helper caches
+__pycache__/
+*.py[cod]
 
 # 8. Debugging and device logs
 *.log
